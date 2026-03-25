@@ -1,0 +1,23 @@
+.DS_Store
+/.build
+/Packages
+xcuserdata/
+DerivedData/
+.swiftpm/configuration/registries.json
+.swiftpm/xcode/package.xcworkspace/contents.xcworkspacedata
+.netrc
+
+# Python environment and cache artifacts
+.venv/
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+
+# Optional local outputs
+audit/output/
+
+# Generated launch evidence packets (timestamped, regenerated on demand)
+audit/launch-evidence-*/
+audit/launch-evidence-*.zip

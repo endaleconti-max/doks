@@ -1,0 +1,28 @@
+{
+  "generatedAt": "2026-03-25T15:50:30.285923+00:00",
+  "packagePath": "/Users/endaleconti/git folder/Documents App",
+  "checks": {
+    "seed_import_succeeds": true,
+    "state_health_baseline_healthy": true,
+    "state_health_baseline_under_2s": true,
+    "no_alerts_in_healthy_baseline": true,
+    "state_health_detects_corruption": true,
+    "alert_raised_for_unhealthy_state": true,
+    "alert_raised_for_load_issue": true,
+    "recovery_reimport_succeeds": true,
+    "state_health_recovers_after_fix": true,
+    "alerts_clear_after_fix": true
+  },
+  "details": {
+    "seed_import": "ok",
+    "baseline_state_health": "ok (duration=0.006s)",
+    "degraded_state_health": "ok",
+    "recovery_reimport": "ok",
+    "recovered_state_health": "ok"
+  },
+  "alerts": [
+    "ALERT_STATE_HEALTH_ATTENTION",
+    "ALERT_STATE_LOAD_ISSUE"
+  ],
+  "overallPassed": true
+}

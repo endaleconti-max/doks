@@ -1,0 +1,48 @@
+{
+	"version": "2.0.0",
+	"tasks": [
+		{
+			"label": "Auto Start: Universal Build+Dev",
+			"type": "shell",
+			"command": "$HOME/.local/bin/vscode-auto-runner",
+			"args": [
+				"--mode",
+				"dev"
+			],
+			"options": {
+				"cwd": "${workspaceFolder}"
+			},
+			"isBackground": true,
+			"problemMatcher": [],
+			"runOptions": {
+				"runOn": "folderOpen"
+			},
+			"presentation": {
+				"reveal": "never",
+				"panel": "dedicated",
+				"focus": false
+			}
+		},
+		{
+			"label": "Run DocumentOrganizer Samples",
+			"type": "shell",
+			"command": "swift package clean && swift run DocumentOrganizer ./samples/invoice.txt ./samples/resume.txt",
+			"isBackground": false,
+			"group": "test"
+		},
+		{
+			"label": "Run Full Verification Suite",
+			"type": "shell",
+			"command": ".venv/bin/python scripts/verify_all.py --package-path . --output-json audit/full-verification-summary.json",
+			"isBackground": false,
+			"group": "test"
+		},
+		{
+			"label": "Generate Launch Evidence Packet",
+			"type": "shell",
+			"command": ".venv/bin/python scripts/generate_launch_evidence_packet.py --package-path .",
+			"isBackground": false,
+			"group": "test"
+		}
+	]
+}

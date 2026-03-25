@@ -1,0 +1,142 @@
+{
+  "generatedAt": "2026-03-25T15:50:31.480339+00:00",
+  "packagePath": "/Users/endaleconti/git folder/Documents App",
+  "overallPassed": true,
+  "scripts": [
+    {
+      "name": "verify_data_subject_rights.py",
+      "command": [
+        "/Users/endaleconti/git folder/Documents App/.venv/bin/python",
+        "/Users/endaleconti/git folder/Documents App/scripts/verify_data_subject_rights.py",
+        "--package-path",
+        "/Users/endaleconti/git folder/Documents App",
+        "--output-json",
+        "/Users/endaleconti/git folder/Documents App/audit/data-subject-rights-report.json"
+      ],
+      "returncode": 0,
+      "passed": true,
+      "outputJson": "/Users/endaleconti/git folder/Documents App/audit/data-subject-rights-report.json",
+      "outputTail": "Data-subject-rights verification: PASS\nReport written to: /Users/endaleconti/git folder/Documents App/audit/data-subject-rights-report.json\n"
+    },
+    {
+      "name": "verify_retention_enforcement.py",
+      "command": [
+        "/Users/endaleconti/git folder/Documents App/.venv/bin/python",
+        "/Users/endaleconti/git folder/Documents App/scripts/verify_retention_enforcement.py",
+        "--package-path",
+        "/Users/endaleconti/git folder/Documents App",
+        "--output-json",
+        "/Users/endaleconti/git folder/Documents App/audit/retention-enforcement-report.json"
+      ],
+      "returncode": 0,
+      "passed": true,
+      "outputJson": "/Users/endaleconti/git folder/Documents App/audit/retention-enforcement-report.json",
+      "outputTail": "Retention enforcement verification: PASS\nReport written to: /Users/endaleconti/git folder/Documents App/audit/retention-enforcement-report.json\n"
+    },
+    {
+      "name": "verify_gdpr_documentation.py",
+      "command": [
+        "/Users/endaleconti/git folder/Documents App/.venv/bin/python",
+        "/Users/endaleconti/git folder/Documents App/scripts/verify_gdpr_documentation.py",
+        "--package-path",
+        "/Users/endaleconti/git folder/Documents App",
+        "--output-json",
+        "/Users/endaleconti/git folder/Documents App/audit/gdpr-documentation-report.json"
+      ],
+      "returncode": 0,
+      "passed": true,
+      "outputJson": "/Users/endaleconti/git folder/Documents App/audit/gdpr-documentation-report.json",
+      "outputTail": "GDPR documentation verification: PASS\nReport written to: /Users/endaleconti/git folder/Documents App/audit/gdpr-documentation-report.json\n"
+    },
+    {
+      "name": "verify_privacy_controls.py",
+      "command": [
+        "/Users/endaleconti/git folder/Documents App/.venv/bin/python",
+        "/Users/endaleconti/git folder/Documents App/scripts/verify_privacy_controls.py",
+        "--package-path",
+        "/Users/endaleconti/git folder/Documents App",
+        "--output-json",
+        "/Users/endaleconti/git folder/Documents App/audit/privacy-controls-report.json"
+      ],
+      "returncode": 0,
+      "passed": true,
+      "outputJson": "/Users/endaleconti/git folder/Documents App/audit/privacy-controls-report.json",
+      "outputTail": "Privacy controls verification: PASS\nReport written to: /Users/endaleconti/git folder/Documents App/audit/privacy-controls-report.json\n"
+    },
+    {
+      "name": "verify_quality_baseline.py",
+      "command": [
+        "/Users/endaleconti/git folder/Documents App/.venv/bin/python",
+        "/Users/endaleconti/git folder/Documents App/scripts/verify_quality_baseline.py",
+        "--package-path",
+        "/Users/endaleconti/git folder/Documents App",
+        "--output-json",
+        "/Users/endaleconti/git folder/Documents App/audit/quality-baseline-report.json"
+      ],
+      "returncode": 0,
+      "passed": true,
+      "outputJson": "/Users/endaleconti/git folder/Documents App/audit/quality-baseline-report.json",
+      "outputTail": "Quality baseline verification: PASS\nMetrics: {\"categorizationQuality\": 100.0, \"functionalTestPassRate\": 100.0, \"performanceTargets\": 100.0, \"reliabilityTargets\": 100.0}\nReport written to: /Users/endaleconti/git folder/Documents App/audit/quality-baseline-report.json\n"
+    },
+    {
+      "name": "verify_security_baseline.py",
+      "command": [
+        "/Users/endaleconti/git folder/Documents App/.venv/bin/python",
+        "/Users/endaleconti/git folder/Documents App/scripts/verify_security_baseline.py",
+        "--package-path",
+        "/Users/endaleconti/git folder/Documents App",
+        "--output-json",
+        "/Users/endaleconti/git folder/Documents App/audit/security-baseline-report.json"
+      ],
+      "returncode": 0,
+      "passed": true,
+      "outputJson": "/Users/endaleconti/git folder/Documents App/audit/security-baseline-report.json",
+      "outputTail": "Security baseline verification: PASS\nReport written to: /Users/endaleconti/git folder/Documents App/audit/security-baseline-report.json\n"
+    },
+    {
+      "name": "verify_backup_restore.py",
+      "command": [
+        "/Users/endaleconti/git folder/Documents App/.venv/bin/python",
+        "/Users/endaleconti/git folder/Documents App/scripts/verify_backup_restore.py",
+        "--package-path",
+        "/Users/endaleconti/git folder/Documents App",
+        "--output-json",
+        "/Users/endaleconti/git folder/Documents App/audit/backup-restore-report.json"
+      ],
+      "returncode": 0,
+      "passed": true,
+      "outputJson": "/Users/endaleconti/git folder/Documents App/audit/backup-restore-report.json",
+      "outputTail": "Backup/restore verification: PASS\nReport written to: /Users/endaleconti/git folder/Documents App/audit/backup-restore-report.json\n"
+    },
+    {
+      "name": "verify_monitoring_alerting.py",
+      "command": [
+        "/Users/endaleconti/git folder/Documents App/.venv/bin/python",
+        "/Users/endaleconti/git folder/Documents App/scripts/verify_monitoring_alerting.py",
+        "--package-path",
+        "/Users/endaleconti/git folder/Documents App",
+        "--output-json",
+        "/Users/endaleconti/git folder/Documents App/audit/monitoring-alerting-report.json"
+      ],
+      "returncode": 0,
+      "passed": true,
+      "outputJson": "/Users/endaleconti/git folder/Documents App/audit/monitoring-alerting-report.json",
+      "outputTail": "Monitoring/alerting verification: PASS\nReport written to: /Users/endaleconti/git folder/Documents App/audit/monitoring-alerting-report.json\n"
+    },
+    {
+      "name": "verify_release_checklist.py",
+      "command": [
+        "/Users/endaleconti/git folder/Documents App/.venv/bin/python",
+        "/Users/endaleconti/git folder/Documents App/scripts/verify_release_checklist.py",
+        "--package-path",
+        "/Users/endaleconti/git folder/Documents App",
+        "--output-json",
+        "/Users/endaleconti/git folder/Documents App/audit/release-checklist-report.json"
+      ],
+      "returncode": 0,
+      "passed": true,
+      "outputJson": "/Users/endaleconti/git folder/Documents App/audit/release-checklist-report.json",
+      "outputTail": "Release checklist verification: PASS\nReport written to: /Users/endaleconti/git folder/Documents App/audit/release-checklist-report.json\n"
+    }
+  ]
+}

@@ -1,0 +1,25 @@
+{
+  "generatedAt": "2026-03-25T15:50:29.702788+00:00",
+  "packagePath": "/Users/endaleconti/git folder/Documents App",
+  "checks": {
+    "dpi_exists": true,
+    "dpi_required_sections_present": true,
+    "ropa_exists": true,
+    "ropa_required_sections_present": true,
+    "legal_basis_exists": true,
+    "legal_basis_required_sections_present": true,
+    "incident_runbook_exists": true,
+    "incident_runbook_required_sections_present": true,
+    "retention_policy_referenced": true,
+    "data_subject_rights_referenced": true
+  },
+  "details": {
+    "dpi": "ok",
+    "ropa": "ok",
+    "legal_basis": "ok",
+    "incident_runbook": "ok",
+    "retention_policy_referenced": "found in 3/3 docs",
+    "data_subject_rights_referenced": "found in 3/3 docs"
+  },
+  "overallPassed": true
+}

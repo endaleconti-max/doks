@@ -1,0 +1,17 @@
+{
+    "git.ignoreLimitWarning": true,
+    "task.allowAutomaticTasks": "on",
+    "files.watcherExclude": {
+        "**/.build/**": true,
+        "**/.venv/**": true,
+        "**/.git/**": true
+    },
+    "search.exclude": {
+        "**/.build/**": true,
+        "**/.venv/**": true
+    },
+    "files.exclude": {
+        "**/.build": true,
+        "**/.venv": true
+    }
+}

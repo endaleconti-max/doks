@@ -1,0 +1,48 @@
+name: CI Verification
+
+on:
+  push:
+    branches:
+      - main
+      - master
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  verify:
+    runs-on: macos-14
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Swift
+        uses: swift-actions/setup-swift@v2
+        with:
+          swift-version: "6.2"
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Build project
+        run: swift build
+
+      - name: Run Swift tests
+        run: swift test
+
+      - name: Run full verification suite
+        run: python3 scripts/verify_all.py --package-path . --output-json audit/full-verification-summary.json
+
+      - name: Compute audit score report
+        run: python3 scripts/audit_score.py --output-json audit/latest-report.json
+
+      - name: Upload audit artifacts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: audit-artifacts
+          path: |
+            audit/*.json
+          if-no-files-found: warn

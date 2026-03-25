@@ -1,0 +1,27 @@
+{
+  "generatedAt": "2026-03-25T15:50:29.957213+00:00",
+  "packagePath": "/Users/endaleconti/git folder/Documents App",
+  "checks": {
+    "import_command_succeeds": true,
+    "access_list_shows_documents": true,
+    "access_search_returns_match": true,
+    "portability_audit_export_succeeds": true,
+    "portability_state_export_succeeds": true,
+    "portability_state_export_schema_valid": true,
+    "erasure_delete_command_succeeds": true,
+    "erasure_deleted_record_absent": true,
+    "erasure_absent_after_restart": true
+  },
+  "details": {
+    "import_command": "ok",
+    "list_before_delete": "ok",
+    "search_invoice": "ok",
+    "audit_export": "ok",
+    "state_export": "ok",
+    "state_export_schema": "ok",
+    "delete": "ok",
+    "list_after_delete": "ok",
+    "list_after_restart": "ok"
+  },
+  "overallPassed": true
+}

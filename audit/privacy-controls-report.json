@@ -1,0 +1,25 @@
+{
+  "generatedAt": "2026-03-25T15:50:29.747038+00:00",
+  "packagePath": "/Users/endaleconti/git folder/Documents App",
+  "checks": {
+    "privacy_policy_module_exists": true,
+    "privacy_presets_defined": true,
+    "privacy_config_interface": true,
+    "data_retention_controls": true,
+    "data_minimization_practiced": true,
+    "encryption_at_rest": true,
+    "privacy_documentation_complete": true,
+    "plugin_permission_controls": true
+  },
+  "details": {
+    "privacy_presets": "ok",
+    "privacy_policy": "ok",
+    "privacy_config": "ok",
+    "data_retention": "ok",
+    "data_minimization": "ok",
+    "encryption": "ok",
+    "privacy_docs": "2/2 compliance documentation files found",
+    "plugin_permissions": "ok"
+  },
+  "overallPassed": true
+}

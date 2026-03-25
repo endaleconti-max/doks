@@ -1,0 +1,4 @@
+Resume
+Experience: Senior iOS Engineer
+Skills: Swift, SwiftUI, Core Data
+Education: MSc Computer Science

@@ -1,0 +1,27 @@
+{
+  "generatedAt": "2026-03-25T15:50:31.474373+00:00",
+  "packagePath": "/Users/endaleconti/git folder/Documents App",
+  "checks": {
+    "checklist_document_exists": true,
+    "swift_test_passes": true,
+    "quality_baseline_passes": true,
+    "rights_workflow_passes": true,
+    "retention_workflow_passes": true,
+    "monitoring_alerting_passes": true,
+    "security_baseline_passes": true,
+    "backup_restore_passes": true,
+    "latest_audit_report_exists": true
+  },
+  "details": {
+    "checklist_document": "/Users/endaleconti/git folder/Documents App/docs/operations/release-rollback-checklist.md",
+    "swift_test": "ok",
+    "quality_baseline_passes": "/Users/endaleconti/git folder/Documents App/audit/quality-baseline-report.json",
+    "rights_workflow_passes": "/Users/endaleconti/git folder/Documents App/audit/data-subject-rights-report.json",
+    "retention_workflow_passes": "/Users/endaleconti/git folder/Documents App/audit/retention-enforcement-report.json",
+    "monitoring_alerting_passes": "/Users/endaleconti/git folder/Documents App/audit/monitoring-alerting-report.json",
+    "security_baseline_passes": "/Users/endaleconti/git folder/Documents App/audit/security-baseline-report.json",
+    "backup_restore_passes": "/Users/endaleconti/git folder/Documents App/audit/backup-restore-report.json",
+    "latest_audit_report": "/Users/endaleconti/git folder/Documents App/audit/latest-report.json"
+  },
+  "overallPassed": true
+}

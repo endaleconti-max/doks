@@ -1,0 +1,56 @@
+{
+  "snapshot": {
+    "date": "2026-03-25",
+    "version": "0.2.0",
+    "auditor": "Product Team"
+  },
+  "phaseScores": [
+    {
+      "id": "phase-0",
+      "name": "Product Foundations",
+      "roadmapWeight": 8.0,
+      "completionPercent": 100.0
+    },
+    {
+      "id": "phase-1",
+      "name": "EU Privacy and Compliance Baseline",
+      "roadmapWeight": 20.0,
+      "completionPercent": 100.0
+    },
+    {
+      "id": "phase-2",
+      "name": "Apple-First Platform Core",
+      "roadmapWeight": 17.0,
+      "completionPercent": 100.0
+    },
+    {
+      "id": "phase-3",
+      "name": "Document Intelligence Engine",
+      "roadmapWeight": 22.0,
+      "completionPercent": 100.0
+    },
+    {
+      "id": "phase-4",
+      "name": "User Experience, Search and Trust Controls",
+      "roadmapWeight": 13.0,
+      "completionPercent": 100.0
+    },
+    {
+      "id": "phase-5",
+      "name": "Tool Extension Framework",
+      "roadmapWeight": 12.0,
+      "completionPercent": 100.0
+    },
+    {
+      "id": "phase-6",
+      "name": "Production Readiness and Operations",
+      "roadmapWeight": 8.0,
+      "completionPercent": 100.0
+    }
+  ],
+  "deliveryPercent": 100.0,
+  "qualityPercent": 100.0,
+  "compliancePercent": 100.0,
+  "overallPercent": 100.0,
+  "stage": "Launch-ready stage"
+}

@@ -1,0 +1,498 @@
+{
+  "documents" : [
+    {
+      "categoryResult" : {
+        "category" : "invoice",
+        "confidence" : 0.95,
+        "explanation" : "Matched category signals such as 'payment terms'."
+      },
+      "contentHash" : "3f88cb3acbc7b260bca1b5db4ba95073ed5ff4ab3d112245a55f3f710d887a47",
+      "contentPreview" : "Stored preview disabled by privacy policy.",
+      "fileName" : "invoice_new.txt",
+      "filePath" : "\/var\/folders\/4t\/1s4xp2sn72ldq5pl83wgmzm80000gn\/T\/tmp.LxbuHkhjbo\/invoice_new.txt",
+      "id" : "611566C4-8A4A-4BA1-83AF-491E685E3386",
+      "importedAt" : "2026-03-24T16:58:53Z"
+    },
+    {
+      "categoryResult" : {
+        "category" : "resume",
+        "confidence" : 0.9299999999999999,
+        "explanation" : "Matched category signals such as 'resume'."
+      },
+      "contentHash" : "e44bd6f4e25be68ea6b5122884524f0347e5b48918e6bd6406f67f36157d5f81",
+      "contentPreview" : "Stored preview disabled by privacy policy.",
+      "fileName" : "resume.txt",
+      "filePath" : ".\/samples\/resume.txt",
+      "id" : "2EE899AB-3D2D-46AB-8596-4376034C8AD5",
+      "importedAt" : "2026-03-24T16:33:58Z"
+    },
+    {
+      "categoryResult" : {
+        "category" : "finance",
+        "confidence" : 0.85,
+        "explanation" : "Learned from prior manual corrections of invoice to finance. Base reason: Matched category signals such as 'payment terms'."
+      },
+      "contentHash" : "aaed6ea7b8295636ec139c4d33d6c0f59eca1cb6df5a307b1222d768963da98f",
+      "contentPreview" : "Stored preview disabled by privacy policy.",
+      "fileName" : "invoice_copy.txt",
+      "filePath" : ".\/samples\/invoice_copy.txt",
+      "id" : "4FE9744B-BF7B-4203-9C91-83F000966ED6",
+      "importedAt" : "2026-03-24T16:28:54Z"
+    },
+    {
+      "categoryResult" : {
+        "category" : "invoice",
+        "confidence" : 0.95,
+        "explanation" : "Matched category signals such as 'payment terms'."
+      },
+      "contentPreview" : "Stored preview disabled by privacy policy.",
+      "correction" : {
+        "correctedAt" : "2026-03-24T16:28:53Z",
+        "newCategory" : "finance",
+        "previousCategory" : "invoice",
+        "reason" : "Learning test"
+      },
+      "fileName" : "invoice.txt",
+      "filePath" : ".\/samples\/invoice.txt",
+      "id" : "ADAB0B01-C55C-478D-9858-ADEE2E0E4248",
+      "importedAt" : "2026-03-23T23:02:59Z"
+    },
+    {
+      "categoryResult" : {
+        "category" : "resume",
+        "confidence" : 0.9299999999999999,
+        "explanation" : "Matched category signals such as 'resume'."
+      },
+      "contentPreview" : "Stored preview disabled by privacy policy.",
+      "fileName" : "resume.txt",
+      "filePath" : ".\/samples\/resume.txt",
+      "id" : "73D3E22C-A8BB-44FA-9B8C-F1D4639AF3D3",
+      "importedAt" : "2026-03-23T23:02:59Z"
+    },
+    {
+      "categoryResult" : {
+        "category" : "resume",
+        "confidence" : 0.9299999999999999,
+        "explanation" : "Matched category signals such as 'resume'."
+      },
+      "contentPreview" : "Stored preview disabled by privacy policy.",
+      "fileName" : "resume.txt",
+      "filePath" : ".\/samples\/resume.txt",
+      "id" : "C7E9D432-2548-435E-8D6F-66ED3255F704",
+      "importedAt" : "2026-03-23T23:02:27Z"
+    },
+    {
+      "categoryResult" : {
+        "category" : "invoice",
+        "confidence" : 0.95,
+        "explanation" : "Matched category signals such as 'payment terms'."
+      },
+      "contentPreview" : "Stored preview disabled by privacy policy.",
+      "fileName" : "invoice.txt",
+      "filePath" : ".\/samples\/invoice.txt",
+      "id" : "FA7E29BB-645D-428E-B0FC-19170A9DE36D",
+      "importedAt" : "2026-03-23T23:02:27Z"
+    },
+    {
+      "categoryResult" : {
+        "category" : "invoice",
+        "confidence" : 0.95,
+        "explanation" : "Matched category signals such as 'payment terms'."
+      },
+      "contentPreview" : "Stored preview disabled by privacy policy.",
+      "fileName" : "invoice.txt",
+      "filePath" : ".\/samples\/invoice.txt",
+      "id" : "1F687FF5-3944-4ACC-86EC-3855F1B17F28",
+      "importedAt" : "2026-03-23T23:01:45Z"
+    },
+    {
+      "categoryResult" : {
+        "category" : "resume",
+        "confidence" : 0.9299999999999999,
+        "explanation" : "Matched category signals such as 'resume'."
+      },
+      "contentPreview" : "Stored preview disabled by privacy policy.",
+      "fileName" : "resume.txt",
+      "filePath" : ".\/samples\/resume.txt",
+      "id" : "4F7D7690-7D3A-42F2-905B-4A5B3F623D1B",
+      "importedAt" : "2026-03-23T23:01:45Z"
+    },
+    {
+      "categoryResult" : {
+        "category" : "invoice",
+        "confidence" : 0.95,
+        "explanation" : "Matched category signals such as 'payment terms'."
+      },
+      "contentPreview" : "Stored preview disabled by privacy policy.",
+      "fileName" : "invoice.txt",
+      "filePath" : ".\/samples\/invoice.txt",
+      "id" : "2446B77C-37B6-449B-A4B0-9ED7089470D5",
+      "importedAt" : "2026-03-23T23:00:02Z"
+    },
+    {
+      "categoryResult" : {
+        "category" : "resume",
+        "confidence" : 0.9299999999999999,
+        "explanation" : "Matched category signals such as 'resume'."
+      },
+      "contentPreview" : "Stored preview disabled by privacy policy.",
+      "fileName" : "resume.txt",
+      "filePath" : ".\/samples\/resume.txt",
+      "id" : "DDAD4C3A-7822-474A-A381-B3EC93E7CB53",
+      "importedAt" : "2026-03-23T23:00:02Z"
+    },
+    {
+      "categoryResult" : {
+        "category" : "resume",
+        "confidence" : 0.9299999999999999,
+        "explanation" : "Matched category signals such as 'resume'."
+      },
+      "contentPreview" : "Stored preview disabled by privacy policy.",
+      "fileName" : "resume.txt",
+      "filePath" : ".\/samples\/resume.txt",
+      "id" : "DEF6F06D-6319-4C6D-8F27-D3F6C61699E7",
+      "importedAt" : "2026-03-23T22:59:59Z"
+    },
+    {
+      "categoryResult" : {
+        "category" : "invoice",
+        "confidence" : 0.95,
+        "explanation" : "Matched category signals such as 'payment terms'."
+      },
+      "contentPreview" : "Stored preview disabled by privacy policy.",
+      "fileName" : "invoice.txt",
+      "filePath" : ".\/samples\/invoice.txt",
+      "id" : "F8991B46-0624-4052-B9C0-239EE817C1DE",
+      "importedAt" : "2026-03-23T22:59:59Z"
+    }
+  ],
+  "events" : [
+    {
+      "actor" : "system",
+      "detail" : "Document imported with category invoice.",
+      "documentID" : "F8991B46-0624-4052-B9C0-239EE817C1DE",
+      "eventType" : "imported",
+      "fileName" : "invoice.txt",
+      "id" : "2DFB99BE-83CA-4E30-9B89-A975E64A488A",
+      "timestamp" : "2026-03-23T22:59:59Z"
+    },
+    {
+      "actor" : "system",
+      "detail" : "Document imported with category resume.",
+      "documentID" : "DEF6F06D-6319-4C6D-8F27-D3F6C61699E7",
+      "eventType" : "imported",
+      "fileName" : "resume.txt",
+      "id" : "0580FBE3-C570-4BA6-BFCB-3853A52E1298",
+      "timestamp" : "2026-03-23T22:59:59Z"
+    },
+    {
+      "actor" : "system",
+      "detail" : "Document imported with category invoice.",
+      "documentID" : "2446B77C-37B6-449B-A4B0-9ED7089470D5",
+      "eventType" : "imported",
+      "fileName" : "invoice.txt",
+      "id" : "83646B51-B1FD-4676-8B30-C9215AAEF7F7",
+      "timestamp" : "2026-03-23T23:00:02Z"
+    },
+    {
+      "actor" : "system",
+      "detail" : "Document imported with category resume.",
+      "documentID" : "DDAD4C3A-7822-474A-A381-B3EC93E7CB53",
+      "eventType" : "imported",
+      "fileName" : "resume.txt",
+      "id" : "98DEF336-FC3F-4862-B7C7-DBE72AD0DA49",
+      "timestamp" : "2026-03-23T23:00:02Z"
+    },
+    {
+      "actor" : "system",
+      "detail" : "Document imported with category invoice.",
+      "documentID" : "1F687FF5-3944-4ACC-86EC-3855F1B17F28",
+      "eventType" : "imported",
+      "fileName" : "invoice.txt",
+      "id" : "4D8C5392-3EA7-4B79-8590-8F1B9E5C6D38",
+      "timestamp" : "2026-03-23T23:01:45Z"
+    },
+    {
+      "actor" : "system",
+      "detail" : "Document imported with category resume.",
+      "documentID" : "4F7D7690-7D3A-42F2-905B-4A5B3F623D1B",
+      "eventType" : "imported",
+      "fileName" : "resume.txt",
+      "id" : "08975E63-F969-4FF7-B717-A900F322D352",
+      "timestamp" : "2026-03-23T23:01:45Z"
+    },
+    {
+      "actor" : "system",
+      "detail" : "Document imported with category invoice.",
+      "documentID" : "FA7E29BB-645D-428E-B0FC-19170A9DE36D",
+      "eventType" : "imported",
+      "fileName" : "invoice.txt",
+      "id" : "FC8601DE-F9FD-49B9-A50B-5B06BC1E46ED",
+      "timestamp" : "2026-03-23T23:02:27Z"
+    },
+    {
+      "actor" : "system",
+      "detail" : "Document imported with category resume.",
+      "documentID" : "C7E9D432-2548-435E-8D6F-66ED3255F704",
+      "eventType" : "imported",
+      "fileName" : "resume.txt",
+      "id" : "1023B0D3-6D96-4FC1-9BFC-B5D1AE2CED81",
+      "timestamp" : "2026-03-23T23:02:27Z"
+    },
+    {
+      "actor" : "system",
+      "detail" : "Document imported with category invoice.",
+      "documentID" : "ADAB0B01-C55C-478D-9858-ADEE2E0E4248",
+      "eventType" : "imported",
+      "fileName" : "invoice.txt",
+      "id" : "EFACC047-C226-4CBD-96DE-211029697004",
+      "timestamp" : "2026-03-23T23:02:59Z"
+    },
+    {
+      "actor" : "system",
+      "detail" : "Document imported with category resume.",
+      "documentID" : "73D3E22C-A8BB-44FA-9B8C-F1D4639AF3D3",
+      "eventType" : "imported",
+      "fileName" : "resume.txt",
+      "id" : "19F3C2D1-5DE5-4790-B24C-BAA5ED2C11BB",
+      "timestamp" : "2026-03-23T23:02:59Z"
+    },
+    {
+      "actor" : "system",
+      "detail" : "Duplicate import skipped for unchanged document.",
+      "documentID" : "ADAB0B01-C55C-478D-9858-ADEE2E0E4248",
+      "eventType" : "imported",
+      "fileName" : "invoice.txt",
+      "id" : "E3A1D697-01D2-421D-A614-4C75AAD74A30",
+      "timestamp" : "2026-03-24T16:28:29Z"
+    },
+    {
+      "actor" : "system",
+      "detail" : "Duplicate import skipped for unchanged document.",
+      "documentID" : "73D3E22C-A8BB-44FA-9B8C-F1D4639AF3D3",
+      "eventType" : "imported",
+      "fileName" : "resume.txt",
+      "id" : "186DE3F5-EA4E-4E3E-9988-B8C2C4C5F8CD",
+      "timestamp" : "2026-03-24T16:28:29Z"
+    },
+    {
+      "actor" : "system",
+      "detail" : "Duplicate import skipped for unchanged document.",
+      "documentID" : "ADAB0B01-C55C-478D-9858-ADEE2E0E4248",
+      "eventType" : "imported",
+      "fileName" : "invoice.txt",
+      "id" : "E30127E0-416C-4696-B69A-7AC47831A69F",
+      "timestamp" : "2026-03-24T16:28:43Z"
+    },
+    {
+      "actor" : "system",
+      "detail" : "Duplicate import skipped for unchanged document.",
+      "documentID" : "73D3E22C-A8BB-44FA-9B8C-F1D4639AF3D3",
+      "eventType" : "imported",
+      "fileName" : "resume.txt",
+      "id" : "8AE78D32-EA5F-4757-999D-502F1062935E",
+      "timestamp" : "2026-03-24T16:28:43Z"
+    },
+    {
+      "actor" : "user",
+      "detail" : "Category changed from invoice to finance: Learning test",
+      "documentID" : "ADAB0B01-C55C-478D-9858-ADEE2E0E4248",
+      "eventType" : "recategorized",
+      "fileName" : "invoice.txt",
+      "id" : "AD83A190-90F3-4BF3-98A5-C1F1E05A9817",
+      "timestamp" : "2026-03-24T16:28:53Z"
+    },
+    {
+      "actor" : "system",
+      "detail" : "Document imported with category finance.",
+      "documentID" : "4FE9744B-BF7B-4203-9C91-83F000966ED6",
+      "eventType" : "imported",
+      "fileName" : "invoice_copy.txt",
+      "id" : "4908D94D-5DF2-4E8D-8853-B2C47AC667FC",
+      "timestamp" : "2026-03-24T16:28:54Z"
+    },
+    {
+      "actor" : "system",
+      "detail" : "Duplicate import skipped for matching content hash.",
+      "documentID" : "4FE9744B-BF7B-4203-9C91-83F000966ED6",
+      "eventType" : "imported",
+      "fileName" : "invoice_copy.txt",
+      "id" : "FE131D91-B9D9-4DDA-9D72-DC0F506013A3",
+      "timestamp" : "2026-03-24T16:33:58Z"
+    },
+    {
+      "actor" : "system",
+      "detail" : "Document imported with category resume.",
+      "documentID" : "2EE899AB-3D2D-46AB-8596-4376034C8AD5",
+      "eventType" : "imported",
+      "fileName" : "resume.txt",
+      "id" : "7EE7DA0B-97A1-44A5-A360-B4B413413560",
+      "timestamp" : "2026-03-24T16:33:58Z"
+    },
+    {
+      "actor" : "system",
+      "detail" : "Duplicate import skipped for matching content hash.",
+      "documentID" : "4FE9744B-BF7B-4203-9C91-83F000966ED6",
+      "eventType" : "imported",
+      "fileName" : "invoice_copy.txt",
+      "id" : "5D35A1A2-D150-494C-9DC3-C124C1A76F95",
+      "timestamp" : "2026-03-24T16:34:12Z"
+    },
+    {
+      "actor" : "system",
+      "detail" : "Duplicate import skipped for matching content hash.",
+      "documentID" : "2EE899AB-3D2D-46AB-8596-4376034C8AD5",
+      "eventType" : "imported",
+      "fileName" : "resume.txt",
+      "id" : "D09201B0-7F68-4609-B08A-8108D0A4ECA1",
+      "timestamp" : "2026-03-24T16:34:12Z"
+    },
+    {
+      "actor" : "system",
+      "detail" : "Duplicate import skipped for matching content hash.",
+      "documentID" : "4FE9744B-BF7B-4203-9C91-83F000966ED6",
+      "eventType" : "imported",
+      "fileName" : "invoice_copy.txt",
+      "id" : "B19CCEC2-34C4-4EDF-A796-6B967B767DCC",
+      "timestamp" : "2026-03-24T16:35:16Z"
+    },
+    {
+      "actor" : "system",
+      "detail" : "Duplicate import skipped for matching content hash.",
+      "documentID" : "2EE899AB-3D2D-46AB-8596-4376034C8AD5",
+      "eventType" : "imported",
+      "fileName" : "resume.txt",
+      "id" : "4178F5AE-6EF6-4E14-9A9C-C070AB2CDAD8",
+      "timestamp" : "2026-03-24T16:35:16Z"
+    },
+    {
+      "actor" : "system",
+      "detail" : "Duplicate import skipped for matching content hash.",
+      "documentID" : "4FE9744B-BF7B-4203-9C91-83F000966ED6",
+      "eventType" : "imported",
+      "fileName" : "invoice_copy.txt",
+      "id" : "962B9A84-D9F2-40A3-A5CC-FA3185F13064",
+      "timestamp" : "2026-03-24T16:43:25Z"
+    },
+    {
+      "actor" : "system",
+      "detail" : "Duplicate import skipped for matching content hash.",
+      "documentID" : "2EE899AB-3D2D-46AB-8596-4376034C8AD5",
+      "eventType" : "imported",
+      "fileName" : "resume.txt",
+      "id" : "10F9EFBC-4EFD-4A07-A636-5BB290304415",
+      "timestamp" : "2026-03-24T16:43:25Z"
+    },
+    {
+      "actor" : "system",
+      "detail" : "Duplicate import skipped for matching content hash.",
+      "documentID" : "4FE9744B-BF7B-4203-9C91-83F000966ED6",
+      "eventType" : "imported",
+      "fileName" : "invoice_copy.txt",
+      "id" : "F668235A-9E4A-4962-8C51-91D0B0149388",
+      "timestamp" : "2026-03-24T16:47:25Z"
+    },
+    {
+      "actor" : "system",
+      "detail" : "Duplicate import skipped for matching content hash.",
+      "documentID" : "2EE899AB-3D2D-46AB-8596-4376034C8AD5",
+      "eventType" : "imported",
+      "fileName" : "resume.txt",
+      "id" : "DB5E89BA-6B5F-4372-9E9F-406CD779AFD3",
+      "timestamp" : "2026-03-24T16:47:25Z"
+    },
+    {
+      "actor" : "system",
+      "detail" : "Duplicate import skipped for matching content hash.",
+      "documentID" : "4FE9744B-BF7B-4203-9C91-83F000966ED6",
+      "eventType" : "imported",
+      "fileName" : "invoice_copy.txt",
+      "id" : "06DE7BD6-87D0-4951-8BDB-AB4E8329D756",
+      "timestamp" : "2026-03-24T16:58:42Z"
+    },
+    {
+      "actor" : "system",
+      "detail" : "Duplicate import skipped for matching content hash.",
+      "documentID" : "2EE899AB-3D2D-46AB-8596-4376034C8AD5",
+      "eventType" : "imported",
+      "fileName" : "resume.txt",
+      "id" : "34E2745C-2BAF-465D-B449-232243A48976",
+      "timestamp" : "2026-03-24T16:58:42Z"
+    },
+    {
+      "actor" : "system",
+      "detail" : "Document imported with category invoice.",
+      "documentID" : "611566C4-8A4A-4BA1-83AF-491E685E3386",
+      "eventType" : "imported",
+      "fileName" : "invoice_new.txt",
+      "id" : "4C82B3B1-2F49-4740-9195-BD7D60103859",
+      "timestamp" : "2026-03-24T16:58:53Z"
+    },
+    {
+      "actor" : "system",
+      "detail" : "Duplicate import skipped for matching content hash.",
+      "documentID" : "4FE9744B-BF7B-4203-9C91-83F000966ED6",
+      "eventType" : "imported",
+      "fileName" : "invoice_copy.txt",
+      "id" : "11597887-A7A0-4843-ADBF-C16BC901546A",
+      "timestamp" : "2026-03-24T17:57:15Z"
+    },
+    {
+      "actor" : "system",
+      "detail" : "Duplicate import skipped for matching content hash.",
+      "documentID" : "4FE9744B-BF7B-4203-9C91-83F000966ED6",
+      "eventType" : "imported",
+      "fileName" : "invoice_copy.txt",
+      "id" : "F20D9857-03E7-414C-ABD1-0A1DCD182E93",
+      "timestamp" : "2026-03-24T23:02:29Z"
+    },
+    {
+      "actor" : "system",
+      "detail" : "Duplicate import skipped for matching content hash.",
+      "documentID" : "2EE899AB-3D2D-46AB-8596-4376034C8AD5",
+      "eventType" : "imported",
+      "fileName" : "resume.txt",
+      "id" : "FF143204-B869-4DF1-8DDA-F3A84790DD74",
+      "timestamp" : "2026-03-24T23:02:29Z"
+    },
+    {
+      "actor" : "system",
+      "detail" : "Duplicate import skipped for matching content hash.",
+      "documentID" : "4FE9744B-BF7B-4203-9C91-83F000966ED6",
+      "eventType" : "imported",
+      "fileName" : "invoice_copy.txt",
+      "id" : "F94EEF76-377A-4DA5-8E2B-56DA9C7C4A0B",
+      "timestamp" : "2026-03-24T23:02:41Z"
+    },
+    {
+      "actor" : "system",
+      "detail" : "Duplicate import skipped for matching content hash.",
+      "documentID" : "2EE899AB-3D2D-46AB-8596-4376034C8AD5",
+      "eventType" : "imported",
+      "fileName" : "resume.txt",
+      "id" : "B99208CB-599D-425D-9332-411844A01361",
+      "timestamp" : "2026-03-24T23:02:41Z"
+    },
+    {
+      "actor" : "system",
+      "detail" : "Duplicate import skipped for matching content hash.",
+      "documentID" : "4FE9744B-BF7B-4203-9C91-83F000966ED6",
+      "eventType" : "imported",
+      "fileName" : "invoice_copy.txt",
+      "id" : "EE10EE22-611F-4AA1-A9D7-B116C328A03D",
+      "timestamp" : "2026-03-24T23:12:01Z"
+    },
+    {
+      "actor" : "system",
+      "detail" : "Duplicate import skipped for matching content hash.",
+      "documentID" : "2EE899AB-3D2D-46AB-8596-4376034C8AD5",
+      "eventType" : "imported",
+      "fileName" : "resume.txt",
+      "id" : "A70AC479-069B-4B85-94DF-763C29026F53",
+      "timestamp" : "2026-03-24T23:12:01Z"
+    }
+  ],
+  "grantedPluginPermissions" : {
+
+  }
+}

@@ -1,0 +1,31 @@
+{
+  "generatedAt": "2026-03-25T15:50:30.207202+00:00",
+  "packagePath": "/Users/endaleconti/git folder/Documents App",
+  "checks": {
+    "seed_import_succeeds": true,
+    "state_and_key_created": true,
+    "export_state_succeeds": true,
+    "backup_schema_valid": true,
+    "state_encrypted_before_restore": true,
+    "state_and_key_removed": true,
+    "restored_state_loads": true,
+    "write_after_restore_succeeds": true,
+    "key_recreated_after_restore": true,
+    "state_reencrypted_after_restore": true,
+    "state_health_reports_healthy": true
+  },
+  "details": {
+    "seed_import": "ok",
+    "initial_state_files": "ok",
+    "export_state": "ok",
+    "backup_schema": "ok",
+    "state_encrypted_before_restore": "ok",
+    "state_and_key_removed": "ok",
+    "list_after_restore": "ok",
+    "write_after_restore": "ok",
+    "key_recreated_after_restore": "ok",
+    "state_reencrypted_after_restore": "ok",
+    "state_health": "ok"
+  },
+  "overallPassed": true
+}

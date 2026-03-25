@@ -1,0 +1,5 @@
+Invoice #2026-0042
+Bill To: Acme GmbH
+VAT ID: DE999999999
+Total Due: 1,499.00 EUR
+Payment terms: 30 days

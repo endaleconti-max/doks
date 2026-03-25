@@ -1,0 +1,32 @@
+{
+  "generatedAt": "2026-03-25T15:50:30.044730+00:00",
+  "packagePath": "/Users/endaleconti/git folder/Documents App",
+  "checks": {
+    "import_succeeds": true,
+    "invoice_category_expected": true,
+    "resume_category_expected": true,
+    "import_under_3s": true,
+    "list_under_2s": true,
+    "search_under_2s": true,
+    "state_health_under_2s": true,
+    "state_health_reports_healthy": true,
+    "list_repeated_runs_reliable": true,
+    "rights_workflow_script_passes": true,
+    "retention_workflow_script_passes": true
+  },
+  "details": {
+    "import": "ok",
+    "categorization": "ok",
+    "performance": "import=0.01s list=0.01s search=0.01s state-health=0.01s",
+    "reliability": "list_successes=5/5 state_health_ok=True",
+    "rights_workflow": "ok",
+    "retention_workflow": "ok"
+  },
+  "metrics": {
+    "functionalTestPassRate": 100.0,
+    "categorizationQuality": 100.0,
+    "performanceTargets": 100.0,
+    "reliabilityTargets": 100.0
+  },
+  "overallPassed": true
+}

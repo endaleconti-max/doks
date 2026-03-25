@@ -1,0 +1,220 @@
+{
+  "snapshot": {
+    "date": "2026-03-25",
+    "version": "0.2.0",
+    "auditor": "Product Team"
+  },
+  "phases": [
+    {
+      "id": "phase-0",
+      "name": "Product Foundations",
+      "roadmapWeight": 8,
+      "milestones": [
+        {
+          "name": "PRD approved",
+          "weight": 40,
+          "status": "complete"
+        },
+        {
+          "name": "Taxonomy baseline defined",
+          "weight": 35,
+          "status": "complete"
+        },
+        {
+          "name": "Risk register created",
+          "weight": 25,
+          "status": "complete"
+        }
+      ]
+    },
+    {
+      "id": "phase-1",
+      "name": "EU Privacy and Compliance Baseline",
+      "roadmapWeight": 20,
+      "milestones": [
+        {
+          "name": "Data Processing Inventory complete",
+          "weight": 20,
+          "status": "complete"
+        },
+        {
+          "name": "RoPA complete",
+          "weight": 20,
+          "status": "complete"
+        },
+        {
+          "name": "Legal basis mapping complete",
+          "weight": 20,
+          "status": "complete"
+        },
+        {
+          "name": "Data subject rights workflows tested",
+          "weight": 20,
+          "status": "complete"
+        },
+        {
+          "name": "Incident response runbook approved",
+          "weight": 20,
+          "status": "complete"
+        }
+      ]
+    },
+    {
+      "id": "phase-2",
+      "name": "Apple-First Platform Core",
+      "roadmapWeight": 17,
+      "milestones": [
+        {
+          "name": "Apple app architecture implemented",
+          "weight": 30,
+          "status": "complete"
+        },
+        {
+          "name": "Encrypted storage baseline complete",
+          "weight": 25,
+          "status": "complete"
+        },
+        {
+          "name": "File import pipeline complete",
+          "weight": 30,
+          "status": "complete"
+        },
+        {
+          "name": "Metadata index operational",
+          "weight": 15,
+          "status": "complete"
+        }
+      ]
+    },
+    {
+      "id": "phase-3",
+      "name": "Document Intelligence Engine",
+      "roadmapWeight": 22,
+      "milestones": [
+        {
+          "name": "OCR integrated",
+          "weight": 20,
+          "status": "complete"
+        },
+        {
+          "name": "Extraction and normalization pipeline complete",
+          "weight": 25,
+          "status": "complete"
+        },
+        {
+          "name": "Classifier with confidence scores complete",
+          "weight": 25,
+          "status": "complete"
+        },
+        {
+          "name": "Category explanation output complete",
+          "weight": 15,
+          "status": "complete"
+        },
+        {
+          "name": "Correction feedback loop complete",
+          "weight": 15,
+          "status": "complete"
+        }
+      ]
+    },
+    {
+      "id": "phase-4",
+      "name": "User Experience, Search and Trust Controls",
+      "roadmapWeight": 13,
+      "milestones": [
+        {
+          "name": "Category dashboard complete",
+          "weight": 20,
+          "status": "complete"
+        },
+        {
+          "name": "Search and filter complete",
+          "weight": 35,
+          "status": "complete"
+        },
+        {
+          "name": "Manual recategorization complete",
+          "weight": 20,
+          "status": "complete"
+        },
+        {
+          "name": "Audit activity timeline complete",
+          "weight": 25,
+          "status": "complete"
+        }
+      ]
+    },
+    {
+      "id": "phase-5",
+      "name": "Tool Extension Framework",
+      "roadmapWeight": 12,
+      "milestones": [
+        {
+          "name": "Plugin interface contract complete",
+          "weight": 35,
+          "status": "complete"
+        },
+        {
+          "name": "Tool sandbox and permissions complete",
+          "weight": 25,
+          "status": "complete"
+        },
+        {
+          "name": "Transformation pilot tool complete",
+          "weight": 20,
+          "status": "complete"
+        },
+        {
+          "name": "Fast editing pilot tool complete",
+          "weight": 20,
+          "status": "complete"
+        }
+      ]
+    },
+    {
+      "id": "phase-6",
+      "name": "Production Readiness and Operations",
+      "roadmapWeight": 8,
+      "milestones": [
+        {
+          "name": "Monitoring and alerting complete",
+          "weight": 25,
+          "status": "complete"
+        },
+        {
+          "name": "Backup and restore validated",
+          "weight": 25,
+          "status": "complete"
+        },
+        {
+          "name": "Security testing complete",
+          "weight": 25,
+          "status": "complete"
+        },
+        {
+          "name": "Release and rollback checklist complete",
+          "weight": 25,
+          "status": "complete"
+        }
+      ]
+    }
+  ],
+  "qualityMetrics": {
+    "functionalTestPassRate": 100,
+    "categorizationQuality": 100,
+    "performanceTargets": 100,
+    "reliabilityTargets": 100
+  },
+  "complianceMetrics": {
+    "gdprDocumentation": 100,
+    "dataSubjectRights": 100,
+    "retentionDeletionEnforcement": 100,
+    "privacyControlCoverage": 100
+  },
+  "weights": {
+    "delivery": 0.7,
+    "quality": 0.2,
+    "compliance": 0.1
+  }
+}

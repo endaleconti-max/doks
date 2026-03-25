@@ -1,0 +1,19 @@
+{
+  "generatedAt": "2026-03-25T15:50:30.038105+00:00",
+  "packagePath": "/Users/endaleconti/git folder/Documents App",
+  "checks": {
+    "seed_state_loads": true,
+    "enforcement_command_succeeds": true,
+    "enforcement_reports_one_delete": true,
+    "stale_document_removed": true,
+    "fresh_document_kept": true,
+    "deletion_audit_event_recorded": true
+  },
+  "details": {
+    "list_before": "ok",
+    "enforce_retention": "ok",
+    "list_after": "ok",
+    "audit_after": "ok"
+  },
+  "overallPassed": true
+}

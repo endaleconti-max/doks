@@ -1,0 +1,24 @@
+# Code Owners for Documents App
+# Pulls in designated reviewers for certain file patterns.
+# See: https://docs.github.com/en/repositories/managing-your-repositorys-settings-and-features/customizing-your-repository/about-code-owners
+
+# All files require approval from core team
+* @endaleconti
+
+# Compliance and GDPR documentation require extra scrutiny
+docs/compliance/** @endaleconti
+docs/operations/** @endaleconti
+
+# Verification scripts require review (core to release gate)
+scripts/verify_*.py @endaleconti
+
+# CI/CD workflow changes require review
+.github/workflows/** @endaleconti
+
+# Build and package configuration
+Package.swift @endaleconti
+.github/** @endaleconti
+
+# Roadmap and audit tracking
+ROADMAP.md @endaleconti
+audit/status.json @endaleconti

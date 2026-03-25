@@ -1,0 +1,24 @@
+{
+    "configurations": [
+        {
+            "type": "swift",
+            "request": "launch",
+            "args": [],
+            "cwd": "${workspaceFolder:Documents App}",
+            "name": "Debug DocumentOrganizer",
+            "target": "DocumentOrganizer",
+            "configuration": "debug",
+            "preLaunchTask": "swift: Build Debug DocumentOrganizer"
+        },
+        {
+            "type": "swift",
+            "request": "launch",
+            "args": [],
+            "cwd": "${workspaceFolder:Documents App}",
+            "name": "Release DocumentOrganizer",
+            "target": "DocumentOrganizer",
+            "configuration": "release",
+            "preLaunchTask": "swift: Build Release DocumentOrganizer"
+        }
+    ]
+}
