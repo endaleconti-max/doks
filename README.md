@@ -33,7 +33,8 @@ This repository starts as a modular Swift package so core logic can be reused in
 - iPadOS app target
 
 An app-facing architecture layer (`AppleAppCore`) is now implemented to provide a stable facade and environment bootstrapping for native app targets.
-The next step is wiring concrete SwiftUI app targets to this facade.
+A minimal macOS SwiftUI app target is now wired to this facade for native import, browsing, search, recategorization, and deletion workflows.
+The next step is extending the same approach to iOS and iPadOS app targets.
 
 ## Architecture
 
@@ -72,6 +73,53 @@ All commits to `main` are protected by GitHub Actions verification that enforces
 3. Run with your own files:
 
    swift run DocumentOrganizer /absolute/path/to/your/document.txt
+
+4. Launch the native macOS app:
+
+   swift run DocumentOrganizerMacApp
+
+5. Package a standalone macOS .app bundle:
+
+   ./scripts/package_macos_app.sh
+
+   open ./dist/DocumentOrganizer.app
+
+   This bundle includes `Info.plist` privacy usage descriptions and macOS file-access entitlements for Downloads/Documents plus user-selected folders.
+
+6. Produce a Developer ID signed + notarized bundle (distribution-ready):
+
+   xcrun notarytool store-credentials "DocumentOrganizerNotary" --apple-id "<APPLE_ID>" --team-id "<TEAM_ID>" --password "<APP_SPECIFIC_PASSWORD>"
+
+   export SIGNING_IDENTITY="Developer ID Application: <Your Name> (<TEAM_ID>)"
+   export NOTARY_PROFILE="DocumentOrganizerNotary"
+   ./scripts/notarize_macos_app.sh
+
+   This creates, signs, notarizes, and staples `./dist/DocumentOrganizer.app`.
+   It also generates release ZIP/DMG/checksum artifacts by default (set `CREATE_RELEASE_ARTIFACTS=0` to skip).
+
+7. Create release artifacts for distribution:
+
+   ./scripts/create_release_artifacts.sh
+
+   This generates timestamped ZIP and DMG files under `./dist/release/`, plus SHA-256 checksums and a metadata report.
+   The metadata now records signing status, notarization status, and whether the artifacts are distribution-ready.
+
+8. Generate GitHub Release manifest and notes template:
+
+   ./scripts/generate_release_manifest.sh
+
+   This generates JSON and Markdown manifest files plus a release-notes stub alongside the latest artifacts in `./dist/release/`.
+
+9. Publish a GitHub release from the latest manifest:
+
+   DRY_RUN=1 ./scripts/publish_github_release.sh
+
+   Then execute for real:
+
+   DRY_RUN=0 ./scripts/publish_github_release.sh
+
+   By default this uses the latest manifest in `./dist/release/` and publishes assets listed there.
+   The publish script refuses ad-hoc or unstapled artifacts unless `ALLOW_UNSIGNED_RELEASE=1` is set explicitly.
 
 ## CLI commands
 
@@ -158,6 +206,18 @@ All commits to `main` are protected by GitHub Actions verification that enforces
 
    "/Users/endaleconti/git folder/Documents App/.venv/bin/python" scripts/verify_quality_baseline.py --package-path . --output-json audit/quality-baseline-report.json
 
+- Run full verification suite and write consolidated summary:
+
+   "/Users/endaleconti/git folder/Documents App/.venv/bin/python" scripts/verify_all.py --package-path . --output-json audit/full-verification-summary.json
+
+- Generate launch readiness markdown report:
+
+   "/Users/endaleconti/git folder/Documents App/.venv/bin/python" scripts/generate_launch_readiness_report.py
+
+- Generate timestamped launch evidence packet and zip archive:
+
+   "/Users/endaleconti/git folder/Documents App/.venv/bin/python" scripts/generate_launch_evidence_packet.py --package-path . --output-dir audit
+
 - Run GDPR documentation verification and produce documentation evidence:
 
    "/Users/endaleconti/git folder/Documents App/.venv/bin/python" scripts/verify_gdpr_documentation.py --package-path . --output-json audit/gdpr-documentation-report.json
@@ -177,10 +237,6 @@ All commits to `main` are protected by GitHub Actions verification that enforces
 - Run release/rollback checklist verification and produce release gate evidence:
 
    "/Users/endaleconti/git folder/Documents App/.venv/bin/python" scripts/verify_release_checklist.py --package-path . --output-json audit/release-checklist-report.json
-
-- Run the full verification suite (all checks + consolidated summary):
-
-   "/Users/endaleconti/git folder/Documents App/.venv/bin/python" scripts/verify_all.py --package-path . --output-json audit/full-verification-summary.json
 
 ## Local state
 
