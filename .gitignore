@@ -17,6 +17,11 @@ __pycache__/
 
 # Optional local outputs
 audit/output/
+audit/organizer-state.json
+audit/organizer-state.key
+
+# Local app bundles and release artifacts
+dist/
 
 # Generated launch evidence packets (timestamped, regenerated on demand)
 audit/launch-evidence-*/
