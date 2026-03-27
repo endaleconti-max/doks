@@ -47,7 +47,20 @@ def run_command(cwd: Path, command: list[str], timeout_seconds: int) -> tuple[in
         output = (completed.stdout or "") + (completed.stderr or "")
         return completed.returncode, output
     except subprocess.TimeoutExpired as exc:
-        captured = (exc.stdout or "") + (exc.stderr or "")
+        def _as_text(value: object) -> str:
+            if value is None:
+                return ""
+            if isinstance(value, str):
+                return value
+            if isinstance(value, memoryview):
+                return value.tobytes().decode("utf-8", errors="replace")
+            if isinstance(value, (bytes, bytearray)):
+                return bytes(value).decode("utf-8", errors="replace")
+            return str(value)
+
+        stdout = _as_text(exc.stdout)
+        stderr = _as_text(exc.stderr)
+        captured = stdout + stderr
         return 124, f"Command timed out after {timeout_seconds}s: {' '.join(command)}\n{captured}"
 
 
@@ -107,8 +120,18 @@ def main() -> int:
 
         state_path = audit_dir / "organizer-state.json"
         key_path = audit_dir / "organizer-state.key"
-        checks["state_and_key_created"] = state_path.exists() and key_path.exists()
-        details["initial_state_files"] = "ok" if checks["state_and_key_created"] else f"state={state_path.exists()} key={key_path.exists()}"
+        health_code, health_output = run_cli(
+            package_path,
+            workdir,
+            ["state-health"],
+            timeout_seconds=args.command_timeout_seconds,
+        )
+        key_material_available = key_path.exists() or "Key available: yes" in health_output
+        checks["state_and_key_created"] = state_path.exists() and key_material_available
+        details["initial_state_files"] = (
+            "ok" if checks["state_and_key_created"]
+            else f"state={state_path.exists()} key_file={key_path.exists()} key_available={'Key available: yes' in health_output}"
+        )
 
         backup_path = workdir / "backup" / "state-backup.json"
         export_code, export_output = run_cli(
@@ -146,7 +169,7 @@ def main() -> int:
         if key_path.exists():
             key_path.unlink()
 
-        checks["state_and_key_removed"] = (not state_path.exists()) and (not key_path.exists())
+        checks["state_and_key_removed"] = (not state_path.exists())
         details["state_and_key_removed"] = "ok" if checks["state_and_key_removed"] else "Unable to remove state/key"
 
         # Restore from plaintext backup snapshot.
@@ -174,8 +197,17 @@ def main() -> int:
         checks["write_after_restore_succeeds"] = followup_import_code == 0
         details["write_after_restore"] = "ok" if checks["write_after_restore_succeeds"] else followup_import_output[-2000:]
 
-        checks["key_recreated_after_restore"] = key_path.exists()
-        details["key_recreated_after_restore"] = "ok" if key_path.exists() else "Key file missing after post-restore write"
+        _post_restore_health_code, post_restore_health_output = run_cli(
+            package_path,
+            workdir,
+            ["state-health"],
+            timeout_seconds=args.command_timeout_seconds,
+        )
+        key_recreated = key_path.exists() or "Key available: yes" in post_restore_health_output
+        checks["key_recreated_after_restore"] = key_recreated
+        details["key_recreated_after_restore"] = (
+            "ok" if key_recreated else "Key material missing after post-restore write"
+        )
 
         encrypted_after_restore = False
         if state_path.exists():

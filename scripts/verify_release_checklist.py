@@ -39,7 +39,18 @@ def run_command(cwd: Path, command: list[str], timeout_seconds: int) -> tuple[in
         output = (completed.stdout or "") + (completed.stderr or "")
         return completed.returncode, output
     except subprocess.TimeoutExpired as exc:
-        captured = (exc.stdout or "") + (exc.stderr or "")
+        def _as_text(value: object) -> str:
+            if value is None:
+                return ""
+            if isinstance(value, str):
+                return value
+            if isinstance(value, memoryview):
+                return value.tobytes().decode("utf-8", errors="replace")
+            if isinstance(value, (bytes, bytearray)):
+                return bytes(value).decode("utf-8", errors="replace")
+            return str(value)
+
+        captured = _as_text(exc.stdout) + _as_text(exc.stderr)
         return 124, f"Command timed out after {timeout_seconds}s: {' '.join(command)}\n{captured}"
 
 
@@ -78,9 +89,19 @@ def main() -> int:
 
     swift_test_code, swift_test_output = run_command(
         package_path,
-        ["swift", "test"],
+        ["swift", "test", "--skip-build"],
         timeout_seconds=args.command_timeout_seconds,
     )
+    if swift_test_code != 0:
+        retry_code, retry_output = run_command(
+            package_path,
+            ["swift", "test"],
+            timeout_seconds=args.command_timeout_seconds,
+        )
+        if retry_code == 0:
+            swift_test_code = retry_code
+            swift_test_output = retry_output
+
     checks["swift_test_passes"] = swift_test_code == 0
     details["swift_test"] = "ok" if checks["swift_test_passes"] else swift_test_output[-2000:]
 

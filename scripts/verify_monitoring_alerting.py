@@ -3,7 +3,7 @@
 
 This script validates:
 - Healthy baseline state emits healthy signal within latency target.
-- Corrupted key material produces unhealthy state signal.
+- Corrupted state payload produces unhealthy state signal.
 - Alert rules trigger on unhealthy state and recovery is detectable.
 """
 
@@ -53,7 +53,20 @@ def run_command(cwd: Path, command: list[str], timeout_seconds: int) -> CommandR
         return CommandResult(returncode=completed.returncode, output=output, duration_seconds=elapsed)
     except subprocess.TimeoutExpired as exc:
         elapsed = time.perf_counter() - started
-        captured = (exc.stdout or "") + (exc.stderr or "")
+        def _as_text(value: object) -> str:
+            if value is None:
+                return ""
+            if isinstance(value, str):
+                return value
+            if isinstance(value, memoryview):
+                return value.tobytes().decode("utf-8", errors="replace")
+            if isinstance(value, (bytes, bytearray)):
+                return bytes(value).decode("utf-8", errors="replace")
+            return str(value)
+
+        stdout = _as_text(exc.stdout)
+        stderr = _as_text(exc.stderr)
+        captured = stdout + stderr
         msg = f"Command timed out after {timeout_seconds}s: {' '.join(command)}\n{captured}"
         return CommandResult(returncode=124, output=msg, duration_seconds=elapsed)
 
@@ -129,9 +142,10 @@ def main() -> int:
             else baseline_health.output[-2000:]
         )
 
-        # Corrupt key material and ensure monitoring detects unhealthy state.
-        key_path = audit_dir / "organizer-state.key"
-        key_path.write_bytes(b"invalid")
+        # Corrupt persisted state payload and ensure monitoring detects unhealthy state.
+        state_path = audit_dir / "organizer-state.json"
+        if state_path.exists():
+            state_path.write_text("{\n  \"algorithm\": \"AES.GCM\",\n  \"combinedCiphertext\": \"not-base64\"\n}\n", encoding="utf-8")
 
         degraded_health = run_cli(
             package_path,
@@ -150,12 +164,9 @@ def main() -> int:
             else degraded_health.output[-2000:]
         )
 
-        # Recovery playbook: reset corrupted state+key and re-seed from source docs.
-        state_path = audit_dir / "organizer-state.json"
+        # Recovery playbook: reset corrupted state and re-seed from source docs.
         if state_path.exists():
             state_path.unlink()
-        if key_path.exists():
-            key_path.unlink()
 
         reimport_result = run_cli(
             package_path,

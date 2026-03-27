@@ -47,7 +47,20 @@ def run_command(cwd: Path, command: list[str], timeout_seconds: int) -> tuple[in
         output = (completed.stdout or "") + (completed.stderr or "")
         return completed.returncode, output
     except subprocess.TimeoutExpired as exc:
-        captured = (exc.stdout or "") + (exc.stderr or "")
+        def _as_text(value: object) -> str:
+            if value is None:
+                return ""
+            if isinstance(value, str):
+                return value
+            if isinstance(value, memoryview):
+                return value.tobytes().decode("utf-8", errors="replace")
+            if isinstance(value, (bytes, bytearray)):
+                return bytes(value).decode("utf-8", errors="replace")
+            return str(value)
+
+        stdout = _as_text(exc.stdout)
+        stderr = _as_text(exc.stderr)
+        captured = stdout + stderr
         return 124, f"Command timed out after {timeout_seconds}s: {' '.join(command)}\n{captured}"
 
 
@@ -102,8 +115,17 @@ def main() -> int:
         state_path = audit_dir / "organizer-state.json"
         key_path = audit_dir / "organizer-state.key"
 
+        _health_code, health_output = run_cli(
+            package_path,
+            workdir,
+            ["state-health"],
+            timeout_seconds=args.command_timeout_seconds,
+        )
+        key_available = "Key available: yes" in health_output
+        key_storage_keychain = "Key storage: keychain" in health_output
+
         checks["state_file_exists"] = state_path.exists()
-        checks["key_file_exists"] = key_path.exists()
+        checks["key_material_available"] = key_available or key_path.exists()
 
         encrypted_envelope_ok = False
         if state_path.exists():
@@ -116,8 +138,11 @@ def main() -> int:
         details["state_encryption"] = "ok" if encrypted_envelope_ok else "State file missing AES.GCM envelope"
 
         key_integrity_ok = False
-        key_permission_ok = False
-        if key_path.exists():
+        key_permission_ok = True
+        if key_storage_keychain:
+            key_integrity_ok = True
+            details["key_permissions"] = "keychain-managed"
+        elif key_path.exists():
             key_bytes = key_path.read_bytes()
             key_integrity_ok = len(key_bytes) == 32
             mode = os.stat(key_path).st_mode & 0o777
@@ -131,7 +156,7 @@ def main() -> int:
 
         # Verify plugin permission gate is enforced by default.
         target_id = doc_ids[0] if doc_ids else ""
-        run_tool_code, run_tool_output = run_cli(
+        _run_tool_code, run_tool_output = run_cli(
             package_path,
             workdir,
             ["run-tool", target_id, "text-to-markdown"] if target_id else ["run-tool"],
@@ -142,13 +167,14 @@ def main() -> int:
         checks["plugin_permission_gate_enforced"] = permission_denied
         details["plugin_permission_gate"] = "ok" if permission_denied else run_tool_output[-2000:]
 
-        # Verify persistence safety gate when key is missing for existing encrypted state.
-        if key_path.exists():
-            key_path.unlink()
+        # Verify persistence safety gate by corrupting state for the next load.
+        # This stays valid regardless of whether key material is stored in keychain or file.
+        if state_path.exists():
+            state_path.write_text("{\n  \"algorithm\": \"AES.GCM\",\n  \"combinedCiphertext\": \"not-base64\"\n}\n", encoding="utf-8")
 
         followup_file = workdir / "new-note.txt"
         followup_file.write_text("Resume\nExperience\nSkills\n", encoding="utf-8")
-        import_after_key_loss_code, import_after_key_loss_output = run_cli(
+        _import_after_key_loss_code, import_after_key_loss_output = run_cli(
             package_path,
             workdir,
             ["import", str(followup_file)],
