@@ -56,6 +56,8 @@ dmg_sha="$(shasum -a 256 "$DMG_PATH" | awk '{print $1}')"
 signing_status="$(awk -F': ' '/^Signing Status:/ {print $2}' "$METADATA_PATH" | tail -n 1)"
 notarization_status="$(awk -F': ' '/^Notarization Status:/ {print $2}' "$METADATA_PATH" | tail -n 1)"
 distribution_ready="$(awk -F': ' '/^Distribution Ready:/ {print $2}' "$METADATA_PATH" | tail -n 1)"
+release_channel="$(awk -F': ' '/^Release Channel:/ {print $2}' "$METADATA_PATH" | tail -n 1)"
+release_policy="$(awk -F': ' '/^Release Policy:/ {print $2}' "$METADATA_PATH" | tail -n 1)"
 
 if [[ -z "$signing_status" ]]; then
   signing_status="unknown"
@@ -69,6 +71,14 @@ if [[ -z "$distribution_ready" ]]; then
   distribution_ready="unknown"
 fi
 
+if [[ -z "$release_channel" ]]; then
+  release_channel="official"
+fi
+
+if [[ -z "$release_policy" ]]; then
+  release_policy="official"
+fi
+
 version="$(echo "$BASE_NAME" | sed -E 's/^DocumentOrganizer-([0-9]+\.[0-9]+\.[0-9]+)-.*/\1/')"
 generated_at="$(date -u +%Y-%m-%dT%H:%M:%SZ)"
 
@@ -78,6 +88,8 @@ cat > "$MANIFEST_JSON" <<EOF
   "product": "DocumentOrganizer",
   "version": "$version",
   "generatedAt": "$generated_at",
+  "releaseChannel": "$release_channel",
+  "releasePolicy": "$release_policy",
   "distributionReady": $(if [[ "$distribution_ready" == "yes" ]]; then echo true; else echo false; fi),
   "signingStatus": "$signing_status",
   "notarizationStatus": "$notarization_status",
@@ -109,6 +121,8 @@ cat > "$MANIFEST_MD" <<EOF
 - Product: DocumentOrganizer
 - Version: $version
 - Generated (UTC): $generated_at
+- Release Channel: $release_channel
+- Release Policy: $release_policy
 - Distribution Ready: $distribution_ready
 - Signing Status: $signing_status
 - Notarization Status: $notarization_status
@@ -136,6 +150,11 @@ cat > "$MANIFEST_MD" <<EOF
 EOF
 
 printf "[3/3] Writing release notes template...\n"
+community_warning=""
+if [[ "$release_channel" == "community" ]]; then
+  community_warning=$'## Community Build Warning\n\n- This build is unsigned and not notarized by Apple.\n- It is intended for trusted testers/community users only.\n- First launch on macOS may require Open Anyway in System Settings > Privacy & Security.\n\n'
+fi
+
 cat > "$RELEASE_NOTES_MD" <<EOF
 # DocumentOrganizer v$version
 
@@ -160,6 +179,10 @@ cat > "$RELEASE_NOTES_MD" <<EOF
 - Use the DMG for standard end-user install flows.
 - Use the ZIP for automated or CI distribution pipelines.
 - Full artifact metadata is available in $metadata_name.
+- Release channel: $release_channel
+- Release policy: $release_policy
+
+$community_warning
 EOF
 
 printf "\nRelease manifest outputs:\n"

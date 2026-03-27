@@ -5,6 +5,13 @@ ROOT_DIR="$(cd "$(dirname "$0")/.." && pwd)"
 DIST_DIR="$ROOT_DIR/dist"
 APP_PATH="$DIST_DIR/DocumentOrganizer.app"
 PLIST_PATH="$ROOT_DIR/macos/DocumentOrganizerMacApp/Info.plist"
+RELEASE_CHANNEL="${RELEASE_CHANNEL:-official}"
+
+if [[ "$RELEASE_CHANNEL" != "official" && "$RELEASE_CHANNEL" != "community" ]]; then
+    echo "Invalid RELEASE_CHANNEL: $RELEASE_CHANNEL"
+    echo "Use RELEASE_CHANNEL=official or RELEASE_CHANNEL=community"
+    exit 1
+fi
 
 if [[ ! -d "$APP_PATH" ]]; then
     echo "App bundle not found at: $APP_PATH"
@@ -68,11 +75,19 @@ if [[ "$SIGNING_STATUS" != "developer-id" || "$NOTARIZATION_STATUS" != "stapled"
     DISTRIBUTION_READY="no"
 fi
 
+RELEASE_POLICY="official"
+if [[ "$RELEASE_CHANNEL" == "community" ]]; then
+    RELEASE_POLICY="community-unsigned"
+    DISTRIBUTION_READY="yes"
+fi
+
 printf "[5/6] Writing metadata report...\n"
 cat > "$METADATA_PATH" <<EOF
 DocumentOrganizer Release Artifacts
 Generated (UTC): $STAMP
 Version: $APP_VERSION
+Release Channel: $RELEASE_CHANNEL
+Release Policy: $RELEASE_POLICY
 App Bundle: $APP_PATH
 ZIP: $ZIP_PATH
 DMG: $DMG_PATH
@@ -93,6 +108,9 @@ EOF
 printf "[6/6] Done.\n\n"
 if [[ "$DISTRIBUTION_READY" != "yes" ]]; then
     printf "Warning: artifacts are not distribution-ready (%s signing, %s notarization).\n" "$SIGNING_STATUS" "$NOTARIZATION_STATUS"
+fi
+if [[ "$RELEASE_CHANNEL" == "community" ]]; then
+    printf "Community release mode enabled: unsigned/not-unnotarized artifacts are allowed and must be labeled for trusted testers only.\n"
 fi
 printf "Release artifacts created in:\n%s\n" "$RELEASE_DIR"
 printf -- "- %s\n" "$ZIP_PATH"

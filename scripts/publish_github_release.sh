@@ -31,11 +31,15 @@ manifest_path = pathlib.Path(sys.argv[1])
 obj = json.loads(manifest_path.read_text())
 version = obj.get("version", "0.0.0")
 distribution_ready = obj.get("distributionReady", False)
+release_channel = obj.get("releaseChannel", "official")
+release_policy = obj.get("releasePolicy", "official")
 signing_status = obj.get("signingStatus", "unknown")
 notarization_status = obj.get("notarizationStatus", "unknown")
 files = [a.get("path", "") for a in obj.get("artifacts", []) if a.get("path")]
 print(version)
 print("true" if distribution_ready else "false")
+print(release_channel)
+print(release_policy)
 print(signing_status)
 print(notarization_status)
 print("\n".join(files))
@@ -49,13 +53,15 @@ fi
 
 VERSION="$(printf "%s\n" "$MANIFEST_OUTPUT" | sed -n '1p')"
 DISTRIBUTION_READY="$(printf "%s\n" "$MANIFEST_OUTPUT" | sed -n '2p')"
-SIGNING_STATUS="$(printf "%s\n" "$MANIFEST_OUTPUT" | sed -n '3p')"
-NOTARIZATION_STATUS="$(printf "%s\n" "$MANIFEST_OUTPUT" | sed -n '4p')"
+RELEASE_CHANNEL="$(printf "%s\n" "$MANIFEST_OUTPUT" | sed -n '3p')"
+RELEASE_POLICY="$(printf "%s\n" "$MANIFEST_OUTPUT" | sed -n '4p')"
+SIGNING_STATUS="$(printf "%s\n" "$MANIFEST_OUTPUT" | sed -n '5p')"
+NOTARIZATION_STATUS="$(printf "%s\n" "$MANIFEST_OUTPUT" | sed -n '6p')"
 ARTIFACTS=()
 while IFS= read -r line; do
     [[ -n "$line" ]] && ARTIFACTS+=("$line")
 done <<EOF
-$(printf "%s\n" "$MANIFEST_OUTPUT" | tail -n +5)
+$(printf "%s\n" "$MANIFEST_OUTPUT" | tail -n +7)
 EOF
 
 if [[ ${#ARTIFACTS[@]} -lt 1 ]]; then
@@ -75,6 +81,8 @@ TITLE="${RELEASE_TITLE:-DocumentOrganizer $VERSION}"
 NOTES_PATH="${RELEASE_NOTES_PATH:-${MANIFEST_PATH%-manifest.json}-release-notes.md}"
 DRY_RUN="${DRY_RUN:-1}"
 ALLOW_UNSIGNED_RELEASE="${ALLOW_UNSIGNED_RELEASE:-0}"
+ALLOW_COMMUNITY_RELEASE="${ALLOW_COMMUNITY_RELEASE:-0}"
+ALLOW_COMMUNITY_WARNING_BYPASS="${ALLOW_COMMUNITY_WARNING_BYPASS:-0}"
 
 if [[ ! -f "$NOTES_PATH" ]]; then
     echo "Release notes file not found: $NOTES_PATH"
@@ -87,6 +95,22 @@ if [[ "$DISTRIBUTION_READY" != "true" && "$ALLOW_UNSIGNED_RELEASE" != "1" ]]; th
     echo "Notarization status: $NOTARIZATION_STATUS"
     echo "If you intend to bypass this safeguard, set ALLOW_UNSIGNED_RELEASE=1 explicitly."
     exit 1
+fi
+
+if [[ "$RELEASE_CHANNEL" == "community" && "$ALLOW_COMMUNITY_RELEASE" != "1" ]]; then
+    echo "Refusing to publish community channel release without explicit acknowledgment."
+    echo "Release policy: $RELEASE_POLICY"
+    echo "Set ALLOW_COMMUNITY_RELEASE=1 to confirm this is a trusted-tester/community distribution."
+    exit 1
+fi
+
+if [[ "$RELEASE_CHANNEL" == "community" && "$ALLOW_COMMUNITY_WARNING_BYPASS" != "1" ]]; then
+    if ! grep -Eiq 'unsigned and not notarized by Apple' "$NOTES_PATH"; then
+        echo "Refusing to publish community release because notes are missing required warning text."
+        echo "Required phrase: unsigned and not notarized by Apple"
+        echo "Update release notes or set ALLOW_COMMUNITY_WARNING_BYPASS=1 explicitly."
+        exit 1
+    fi
 fi
 
 if [[ "$DRY_RUN" != "1" ]]; then
@@ -113,6 +137,8 @@ printf -- "- Tag: %s\n" "$TAG"
 printf -- "- Title: %s\n" "$TITLE"
 printf -- "- Notes: %s\n" "$NOTES_PATH"
 printf -- "- Distribution ready: %s\n" "$DISTRIBUTION_READY"
+printf -- "- Release channel: %s\n" "$RELEASE_CHANNEL"
+printf -- "- Release policy: %s\n" "$RELEASE_POLICY"
 printf -- "- Signing status: %s\n" "$SIGNING_STATUS"
 printf -- "- Notarization status: %s\n" "$NOTARIZATION_STATUS"
 printf -- "- Artifacts:\n"

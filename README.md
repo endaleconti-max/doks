@@ -104,6 +104,23 @@ All commits to `main` are protected by GitHub Actions verification that enforces
    This generates timestamped ZIP and DMG files under `./dist/release/`, plus SHA-256 checksums and a metadata report.
    The metadata now records signing status, notarization status, and whether the artifacts are distribution-ready.
 
+7a. Create a community release without an Apple Developer account:
+
+   RELEASE_CHANNEL=community ./scripts/create_release_artifacts.sh
+   ./scripts/generate_release_manifest.sh
+   ALLOW_COMMUNITY_RELEASE=1 DRY_RUN=1 ./scripts/publish_github_release.sh
+
+   Then execute for real:
+
+   ALLOW_COMMUNITY_RELEASE=1 DRY_RUN=0 ./scripts/publish_github_release.sh
+
+   Use this only for trusted testers and clearly label the release as unsigned/unnotarized.
+   macOS Gatekeeper warnings are expected for first launch.
+   See `docs/operations/community-distribution-guide.md` for copy-ready tester instructions.
+   Use `docs/operations/community-release-notes-template.md` as the default publish text for community releases.
+   Community release publish now enforces warning text in release notes; bypass only with `ALLOW_COMMUNITY_WARNING_BYPASS=1`.
+   In VS Code, use `Community Release (No Apple) - Publish (Warning Bypass)` only for emergency/manual-reviewed cases.
+
 8. Generate GitHub Release manifest and notes template:
 
    ./scripts/generate_release_manifest.sh
@@ -120,6 +137,7 @@ All commits to `main` are protected by GitHub Actions verification that enforces
 
    By default this uses the latest manifest in `./dist/release/` and publishes assets listed there.
    The publish script refuses ad-hoc or unstapled artifacts unless `ALLOW_UNSIGNED_RELEASE=1` is set explicitly.
+   Community channel manifests additionally require `ALLOW_COMMUNITY_RELEASE=1`.
 
 ## CLI commands
 

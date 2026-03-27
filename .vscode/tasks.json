@@ -73,6 +73,27 @@
 			"group": "build"
 		},
 		{
+			"label": "Community Release (No Apple) - Dry Run",
+			"type": "shell",
+			"command": "RELEASE_CHANNEL=community ./scripts/create_release_artifacts.sh && ./scripts/generate_release_manifest.sh && ALLOW_COMMUNITY_RELEASE=1 DRY_RUN=1 ./scripts/publish_github_release.sh",
+			"isBackground": false,
+			"group": "build"
+		},
+		{
+			"label": "Community Release (No Apple) - Publish",
+			"type": "shell",
+			"command": "RELEASE_CHANNEL=community ./scripts/create_release_artifacts.sh && ./scripts/generate_release_manifest.sh && ALLOW_COMMUNITY_RELEASE=1 DRY_RUN=0 ./scripts/publish_github_release.sh",
+			"isBackground": false,
+			"group": "build"
+		},
+		{
+			"label": "Community Release (No Apple) - Publish (Warning Bypass)",
+			"type": "shell",
+			"command": "RELEASE_CHANNEL=community ./scripts/create_release_artifacts.sh && ./scripts/generate_release_manifest.sh && ALLOW_COMMUNITY_RELEASE=1 ALLOW_COMMUNITY_WARNING_BYPASS=1 DRY_RUN=0 ./scripts/publish_github_release.sh",
+			"isBackground": false,
+			"group": "build"
+		},
+		{
 			"label": "Generate Launch Evidence Packet",
 			"type": "shell",
 			"command": ".venv/bin/python scripts/generate_launch_evidence_packet.py --package-path .",
