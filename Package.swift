@@ -17,13 +17,19 @@ let package = Package(
         .library(name: "PluginKit", targets: ["PluginKit"]),
         .library(name: "AppleAppCore", targets: ["AppleAppCore"]),
         .library(name: "Services", targets: ["Services"]),
-        .executable(name: "DocumentOrganizer", targets: ["DocumentOrganizer"])
+        .executable(name: "DocumentOrganizer", targets: ["DocumentOrganizer"]),
+        .executable(name: "DocumentOrganizerMacApp", targets: ["DocumentOrganizerMacApp"])
     ],
     dependencies: [
         .package(url: "https://github.com/apple/swift-testing.git", from: "0.6.0")
     ],
     targets: [
-        .target(name: "Core"),
+        .target(
+            name: "Core",
+            linkerSettings: [
+                .linkedFramework("CoreServices", .when(platforms: [.macOS]))
+            ]
+        ),
         .target(name: "Ingestion"),
         .target(
             name: "Categorization",
@@ -45,6 +51,10 @@ let package = Package(
         .executableTarget(
             name: "DocumentOrganizer",
             dependencies: ["Services", "Core", "Privacy", "PluginKit"]
+        ),
+        .executableTarget(
+            name: "DocumentOrganizerMacApp",
+            dependencies: ["AppleAppCore", "Core"]
         ),
         .testTarget(
             name: "ServicesTests",

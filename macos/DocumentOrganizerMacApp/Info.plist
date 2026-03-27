@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+    <key>CFBundleDevelopmentRegion</key>
+    <string>en</string>
+    <key>CFBundleDisplayName</key>
+    <string>DocumentOrganizer</string>
+    <key>CFBundleIconFile</key>
+    <string>AppIcon</string>
+    <key>CFBundleExecutable</key>
+    <string>DocumentOrganizerMacApp</string>
+    <key>CFBundleIdentifier</key>
+    <string>com.endaleconti.documentorganizer</string>
+    <key>CFBundleInfoDictionaryVersion</key>
+    <string>6.0</string>
+    <key>CFBundleName</key>
+    <string>DocumentOrganizer</string>
+    <key>CFBundlePackageType</key>
+    <string>APPL</string>
+    <key>CFBundleShortVersionString</key>
+    <string>1.0.0</string>
+    <key>CFBundleVersion</key>
+    <string>1</string>
+    <key>LSMinimumSystemVersion</key>
+    <string>13.0</string>
+    <key>LSUIElement</key>
+    <false/>
+    <key>NSDesktopFolderUsageDescription</key>
+    <string>DocumentOrganizer needs access to Desktop to automatically read and organize incoming documents.</string>
+    <key>NSDocumentsFolderUsageDescription</key>
+    <string>DocumentOrganizer needs access to Documents to organize files into category folders.</string>
+    <key>NSDownloadsFolderUsageDescription</key>
+    <string>DocumentOrganizer needs access to Downloads to automatically process new incoming documents.</string>
+    <key>NSSupportsAutomaticGraphicsSwitching</key>
+    <true/>
+</dict>
+</plist>

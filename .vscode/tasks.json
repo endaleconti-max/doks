@@ -38,6 +38,41 @@
 			"group": "test"
 		},
 		{
+			"label": "Package macOS App Bundle",
+			"type": "shell",
+			"command": "./scripts/package_macos_app.sh",
+			"isBackground": false,
+			"group": "build"
+		},
+		{
+			"label": "Notarize macOS App Bundle",
+			"type": "shell",
+			"command": "./scripts/notarize_macos_app.sh",
+			"isBackground": false,
+			"group": "build"
+		},
+		{
+			"label": "Create macOS Release Artifacts",
+			"type": "shell",
+			"command": "./scripts/create_release_artifacts.sh",
+			"isBackground": false,
+			"group": "build"
+		},
+		{
+			"label": "Generate Release Manifest",
+			"type": "shell",
+			"command": "./scripts/generate_release_manifest.sh",
+			"isBackground": false,
+			"group": "build"
+		},
+		{
+			"label": "Publish GitHub Release (Dry Run)",
+			"type": "shell",
+			"command": "DRY_RUN=1 ./scripts/publish_github_release.sh",
+			"isBackground": false,
+			"group": "build"
+		},
+		{
 			"label": "Generate Launch Evidence Packet",
 			"type": "shell",
 			"command": ".venv/bin/python scripts/generate_launch_evidence_packet.py --package-path .",

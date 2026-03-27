@@ -98,10 +98,12 @@ Real-time status: #documentorganizer-launch-live"
 Follow [deployment-launch-guide.md](deployment-launch-guide.md) platform-specific steps:
 
 **macOS (AppKit Target):**
-- [ ] Step 1: Build release binary: `swift build -c release`
-- [ ] Step 2: Code sign: `codesign --sign "Developer ID Application" ./.build/release/DocumentOrganizer`
-- [ ] Step 3: Notarize: `xcrun altool --notarize-app -f ./.build/release/DocumentOrganizer.zip -t osx`
-- [ ] Step 4: Wait for notarization result (typically 1-5 minutes)
+- [ ] Step 1: Build and package app bundle: `./scripts/package_macos_app.sh`
+- [ ] Step 2: Configure notary profile once: `xcrun notarytool store-credentials "DocumentOrganizerNotary" --apple-id "<APPLE_ID>" --team-id "<TEAM_ID>" --password "<APP_SPECIFIC_PASSWORD>"`
+- [ ] Step 3: Export signing/notary env vars:
+   `export SIGNING_IDENTITY="Developer ID Application: <Your Name> (<TEAM_ID>)"`
+   `export NOTARY_PROFILE="DocumentOrganizerNotary"`
+- [ ] Step 4: Notarize and staple: `./scripts/notarize_macos_app.sh`
 - [ ] Step 5: Distribute via update channel (see deployment guide)
 - [ ] Step 6: Monitor for client adoption (see monitoring dashboard)
 
