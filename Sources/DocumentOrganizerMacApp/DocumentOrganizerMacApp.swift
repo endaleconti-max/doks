@@ -612,6 +612,7 @@ final class DocumentOrganizerViewModel: ObservableObject {
     private var healthDescription = "Unavailable"
     private var fileSystemWatcher: FileSystemWatcher?
     private var fileOrganizer: FileOrganizer?
+    private var securityScopedOrganizationRoot: URL?
 
     private final class ThreadSafeURLCollector: @unchecked Sendable {
         private let lock = NSLock()
@@ -640,6 +641,12 @@ final class DocumentOrganizerViewModel: ObservableObject {
             }
         } catch {
             errorMessage = error.localizedDescription
+        }
+    }
+
+    deinit {
+        if let securityScopedOrganizationRoot {
+            securityScopedOrganizationRoot.stopAccessingSecurityScopedResource()
         }
     }
 
@@ -918,11 +925,22 @@ final class DocumentOrganizerViewModel: ObservableObject {
             return
         }
 
+        let resolvedOrganizationRoot = s.resolvedOrganizationRoot
+        var startedSecurityScope = false
+        if s.organizationRootBookmark != nil {
+            startedSecurityScope = resolvedOrganizationRoot.startAccessingSecurityScopedResource()
+            guard startedSecurityScope else {
+                errorMessage = "Unable to access the selected organization folder. Re-select it in Settings > Storage."
+                return
+            }
+            securityScopedOrganizationRoot = resolvedOrganizationRoot
+        }
+
         do {
             fileSystemWatcher = FileSystemWatcher()
-            fileOrganizer = FileOrganizer(organizationRoot: s.resolvedOrganizationRoot)
+            fileOrganizer = FileOrganizer(organizationRoot: resolvedOrganizationRoot)
 
-            organizationRoot = s.resolvedOrganizationRoot
+            organizationRoot = resolvedOrganizationRoot
 
             for dir in watchedDirs {
                 try fileSystemWatcher?.startWatching(directory: dir)
@@ -939,6 +957,10 @@ final class DocumentOrganizerViewModel: ObservableObject {
             successMessage = "Watching: \(folderNames)."
             updateFolderStatistics()
         } catch {
+            if startedSecurityScope {
+                resolvedOrganizationRoot.stopAccessingSecurityScopedResource()
+                securityScopedOrganizationRoot = nil
+            }
             errorMessage = "Failed to start folder watching: \(error.localizedDescription)"
             isFolderWatchingEnabled = false
         }
@@ -947,6 +969,10 @@ final class DocumentOrganizerViewModel: ObservableObject {
     func stopFolderWatching() {
         fileSystemWatcher?.stopAll()
         fileSystemWatcher = nil
+        if let securityScopedOrganizationRoot {
+            securityScopedOrganizationRoot.stopAccessingSecurityScopedResource()
+            self.securityScopedOrganizationRoot = nil
+        }
         isFolderWatchingEnabled = false
         successMessage = "Stopped watching folders."
     }
@@ -958,20 +984,26 @@ final class DocumentOrganizerViewModel: ObservableObject {
 
         do {
             let imported = try facade.importDocuments(paths: urls.map(\.path))
-            refresh()
 
             for document in imported {
                 do {
-                    let sourceURL = urls.first { url in
-                        url.lastPathComponent == document.fileName
-                    } ?? URL(fileURLWithPath: document.filePath)
+                    let sourceURL = URL(fileURLWithPath: document.filePath)
+                    guard FileManager.default.fileExists(atPath: sourceURL.path) else {
+                        continue
+                    }
 
-                    _ = try organizer.organize(file: sourceURL, document: document)
+                    let organizedURL = try organizer.organize(file: sourceURL, document: document)
+                    _ = try facade.updateDocumentFilePath(
+                        documentID: document.id,
+                        to: organizedURL.path,
+                        actor: "system"
+                    )
                 } catch {
                     print("Failed to organize file: \(error)")
                 }
             }
 
+            refresh()
             updateFolderStatistics()
             if !imported.isEmpty {
                 successMessage = "Auto-organized \(imported.count) new document(s)."

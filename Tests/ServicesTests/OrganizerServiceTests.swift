@@ -126,6 +126,8 @@ struct OrganizerServiceTests {
                 Issue.record("PNG should be treated as a supported OCR input")
             case .unreadableData, .ocrUnavailable:
                 break
+            case .docxArchiveTooLarge, .docxContentTooLarge, .docxExtractionTimedOut:
+                Issue.record("PNG ingestion should not fail with DOCX-specific guard errors")
             }
         }
         #else
@@ -151,6 +153,58 @@ struct OrganizerServiceTests {
         // DOCX extraction currently uses macOS unzip tooling.
         #expect(true)
         #endif
+    }
+
+    @Test("DOCX archive size guard rejects oversized files")
+    func docxArchiveSizeGuardRejectsOversizedInput() throws {
+        #if os(macOS)
+        let fixture = try TestFixture()
+        let oversizedURL = fixture.rootURL.appendingPathComponent("oversized.docx")
+        let oversizedData = Data(repeating: 0x41, count: 10_000_001)
+        try oversizedData.write(to: oversizedURL)
+
+        let ingestion = DocumentIngestionService()
+        do {
+            _ = try ingestion.extractText(from: oversizedURL)
+            Issue.record("Expected docxArchiveTooLarge guard to reject oversized DOCX input")
+        } catch let error as DocumentIngestionError {
+            guard case .docxArchiveTooLarge = error else {
+                Issue.record("Expected docxArchiveTooLarge, got: \(error)")
+                return
+            }
+        }
+        #else
+        #expect(true)
+        #endif
+    }
+
+    @Test("Updating stored file path keeps subsequent tool runs functional")
+    func updateDocumentFilePathAfterMove() throws {
+        let fixture = try TestFixture()
+
+        let sourceURL = try fixture.writeTextFile(
+            named: "move-me.txt",
+            contents: "Paragraph one.\n\nParagraph two.\n"
+        )
+
+        let record = try fixture.organizer.processDocument(at: sourceURL.path)
+
+        let movedURL = fixture.rootURL
+            .appendingPathComponent("organized", isDirectory: true)
+            .appendingPathComponent("invoice-2026-03-27-move-me.txt")
+        try FileManager.default.createDirectory(
+            at: movedURL.deletingLastPathComponent(),
+            withIntermediateDirectories: true
+        )
+        try FileManager.default.moveItem(at: sourceURL, to: movedURL)
+
+        let updated = try fixture.organizer.updateDocumentFilePath(documentID: record.id, to: movedURL.path)
+        #expect(updated.filePath == movedURL.path)
+        #expect(updated.fileName == movedURL.lastPathComponent)
+
+        try fixture.organizer.grantPermissions([.readDocument, .createDerivedFile], to: "text-to-markdown")
+        let toolRun = try fixture.organizer.runTool(documentID: record.id, pluginIdentifier: "text-to-markdown")
+        #expect(FileManager.default.fileExists(atPath: toolRun.derived.filePath))
     }
 }
 

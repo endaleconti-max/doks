@@ -54,6 +54,10 @@ public final class DocumentOrganizerFacade {
         try organizer.deleteDocument(documentID: documentID)
     }
 
+    public func updateDocumentFilePath(documentID: UUID, to newPath: String, actor: String = "system") throws -> DocumentRecord {
+        try organizer.updateDocumentFilePath(documentID: documentID, to: newPath, actor: actor)
+    }
+
     public func dashboardSnapshot(auditLimit: Int = 12) -> DashboardSnapshot {
         DashboardSnapshot(
             generatedAt: Date(),

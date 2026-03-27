@@ -5,6 +5,9 @@ import Foundation
 import Ingestion
 import PluginKit
 import Privacy
+#if canImport(Security)
+import Security
+#endif
 
 public enum OrganizerError: Error, LocalizedError {
     case fileMissing(String)
@@ -45,6 +48,8 @@ private struct EncryptedOrganizerState: Codable {
 public struct StateHealthReport {
     public let stateFilePath: String
     public let keyFilePath: String
+    public let keyStorage: String
+    public let keyAvailable: Bool
     public let stateFileExists: Bool
     public let keyFileExists: Bool
     public let keyLengthBytes: Int?
@@ -53,7 +58,7 @@ public struct StateHealthReport {
     public let recommendations: [String]
 
     public var healthy: Bool {
-        loadIssue == nil && (!stateFileEncrypted || keyFileExists)
+        loadIssue == nil && (!stateFileEncrypted || keyAvailable)
     }
 }
 
@@ -82,6 +87,9 @@ public final class OrganizerService {
     private var documentsByID: [UUID: DocumentRecord] = [:]
     private var auditEvents: [AuditEvent] = []
     private var stateLoadError: String?
+    private var migratedLegacyKeyFileToKeychain = false
+
+    private static let keychainServiceName = "com.documentorganizer.statekey.v1"
 
     public init(
         ingestion: DocumentIngestionProviding = DocumentIngestionService(),
@@ -361,6 +369,48 @@ public final class OrganizerService {
         try persistStateIfNeeded()
     }
 
+    public func updateDocumentFilePath(
+        documentID: UUID,
+        to newPath: String,
+        actor: String = "system"
+    ) throws -> DocumentRecord {
+        guard let existing = documentsByID[documentID] else {
+            throw OrganizerError.documentNotFound(documentID)
+        }
+
+        guard FileManager.default.fileExists(atPath: newPath) else {
+            throw OrganizerError.fileMissing(newPath)
+        }
+
+        if existing.filePath == newPath {
+            return existing
+        }
+
+        let updatedURL = URL(fileURLWithPath: newPath)
+        let updated = DocumentRecord(
+            id: existing.id,
+            fileName: updatedURL.lastPathComponent,
+            filePath: newPath,
+            contentHash: existing.contentHash,
+            importedAt: existing.importedAt,
+            contentPreview: existing.contentPreview,
+            categoryResult: existing.categoryResult,
+            correction: existing.correction
+        )
+
+        documentsByID[documentID] = updated
+        appendAuditEvent(
+            .exported,
+            documentID: updated.id,
+            fileName: updated.fileName,
+            actor: actor,
+            detail: "Document file location updated to \(newPath)."
+        )
+        try persistStateIfNeeded()
+
+        return updated
+    }
+
     public func enforceRetentionPolicy(referenceDate: Date = Date()) throws -> RetentionEnforcementResult {
         if let stateLoadError {
             throw OrganizerError.persistenceFailure(
@@ -483,10 +533,25 @@ public final class OrganizerService {
         let statePath = stateURL?.path ?? "(not configured)"
         let keyPath = stateKeyURL?.path ?? "(not configured)"
         let stateExists = stateURL.map { FileManager.default.fileExists(atPath: $0.path) } ?? false
-        let keyExists = stateKeyURL.map { FileManager.default.fileExists(atPath: $0.path) } ?? false
+        let keyFileExists = stateKeyURL.map { FileManager.default.fileExists(atPath: $0.path) } ?? false
+
+        let keychainData = try? fetchKeyDataFromKeychain()
+        let keychainExists = keychainData != nil
+        let keyAvailable = keychainExists || keyFileExists
+
+        let keyStorage: String
+        if keychainExists {
+            keyStorage = "keychain"
+        } else if keyFileExists {
+            keyStorage = "file"
+        } else {
+            keyStorage = "missing"
+        }
 
         var keyLength: Int?
-        if keyExists, let stateKeyURL {
+        if let keychainData {
+            keyLength = keychainData.count
+        } else if keyFileExists, let stateKeyURL {
             keyLength = try? Data(contentsOf: stateKeyURL).count
         }
 
@@ -501,11 +566,14 @@ public final class OrganizerService {
         if !stateExists {
             recommendations.append("No state file exists yet. Run an import command to initialize state.")
         }
-        if stateEncrypted && !keyExists {
-            recommendations.append("Encrypted state detected but key file is missing. Restore 'audit/organizer-state.key' from backup.")
+        if stateEncrypted && !keyAvailable {
+            recommendations.append("Encrypted state detected but key material is missing. Restore keychain entry or legacy key file backup.")
         }
         if let keyLength, keyLength != 32 {
             recommendations.append("Key file length is invalid. Expected 32 bytes for AES-256 key material.")
+        }
+        if migratedLegacyKeyFileToKeychain {
+            recommendations.append("Legacy key file was migrated to Keychain for stronger local key protection.")
         }
         if let loadIssue = stateLoadError {
             recommendations.append("Resolve state load issue first; write operations are blocked to protect existing state.")
@@ -518,8 +586,10 @@ public final class OrganizerService {
         return StateHealthReport(
             stateFilePath: statePath,
             keyFilePath: keyPath,
+            keyStorage: keyStorage,
+            keyAvailable: keyAvailable,
             stateFileExists: stateExists,
-            keyFileExists: keyExists,
+            keyFileExists: keyFileExists,
             keyLengthBytes: keyLength,
             stateFileEncrypted: stateEncrypted,
             loadIssue: stateLoadError,
@@ -681,6 +751,13 @@ public final class OrganizerService {
     }
 
     private func resolveOrCreateStateEncryptionKey() throws -> SymmetricKey {
+        if let keyData = try fetchKeyDataFromKeychain() {
+            guard keyData.count == 32 else {
+                throw OrganizerError.persistenceFailure("Invalid state encryption key length")
+            }
+            return SymmetricKey(data: keyData)
+        }
+
         guard let stateKeyURL else {
             throw OrganizerError.persistenceFailure("Missing state encryption key path")
         }
@@ -690,24 +767,46 @@ public final class OrganizerService {
             guard existing.count == 32 else {
                 throw OrganizerError.persistenceFailure("Invalid state encryption key length")
             }
+
+            do {
+                try saveKeyDataToKeychain(existing)
+                try? FileManager.default.removeItem(at: stateKeyURL)
+                migratedLegacyKeyFileToKeychain = true
+            } catch {
+                // Preserve legacy file fallback if keychain is unavailable.
+            }
+
             return SymmetricKey(data: existing)
         }
 
         let newKey = SymmetricKey(size: .bits256)
         let keyData = newKey.withUnsafeBytes { Data($0) }
-        let attributes: [FileAttributeKey: Any] = [.posixPermissions: 0o600]
-        try keyData.write(to: stateKeyURL, options: .atomic)
-        try FileManager.default.setAttributes(attributes, ofItemAtPath: stateKeyURL.path)
+
+        do {
+            try saveKeyDataToKeychain(keyData)
+        } catch {
+            let attributes: [FileAttributeKey: Any] = [.posixPermissions: 0o600]
+            try keyData.write(to: stateKeyURL, options: .atomic)
+            try FileManager.default.setAttributes(attributes, ofItemAtPath: stateKeyURL.path)
+        }
+
         return newKey
     }
 
     private func resolveExistingStateEncryptionKey() throws -> SymmetricKey {
+        if let keyData = try fetchKeyDataFromKeychain() {
+            guard keyData.count == 32 else {
+                throw OrganizerError.persistenceFailure("Invalid state encryption key length")
+            }
+            return SymmetricKey(data: keyData)
+        }
+
         guard let stateKeyURL else {
             throw OrganizerError.persistenceFailure("Missing state encryption key path")
         }
 
         guard FileManager.default.fileExists(atPath: stateKeyURL.path) else {
-            throw OrganizerError.persistenceFailure("Missing state encryption key for encrypted organizer state")
+            throw OrganizerError.persistenceFailure("Missing state encryption key material for encrypted organizer state")
         }
 
         let existing = try Data(contentsOf: stateKeyURL)
@@ -715,6 +814,89 @@ public final class OrganizerService {
             throw OrganizerError.persistenceFailure("Invalid state encryption key length")
         }
 
+        do {
+            try saveKeyDataToKeychain(existing)
+            try? FileManager.default.removeItem(at: stateKeyURL)
+            migratedLegacyKeyFileToKeychain = true
+        } catch {
+            // Keep file-based fallback when keychain is unavailable.
+        }
+
         return SymmetricKey(data: existing)
+    }
+
+    private func keychainAccountIdentifier() throws -> String {
+        guard let stateURL else {
+            throw OrganizerError.persistenceFailure("Missing state URL for keychain account derivation")
+        }
+        let digest = SHA256.hash(data: Data(stateURL.path.utf8))
+        let account = digest.map { String(format: "%02x", $0) }.joined()
+        return "statekey-\(account)"
+    }
+
+    private func fetchKeyDataFromKeychain() throws -> Data? {
+#if canImport(Security)
+        let account = try keychainAccountIdentifier()
+        let query: [String: Any] = [
+            kSecClass as String: kSecClassGenericPassword,
+            kSecAttrService as String: Self.keychainServiceName,
+            kSecAttrAccount as String: account,
+            kSecReturnData as String: true,
+            kSecMatchLimit as String: kSecMatchLimitOne
+        ]
+
+        var item: CFTypeRef?
+        let status = SecItemCopyMatching(query as CFDictionary, &item)
+        if status == errSecItemNotFound {
+            return nil
+        }
+        guard status == errSecSuccess else {
+            throw OrganizerError.persistenceFailure("Unable to read keychain state key (status \(status)).")
+        }
+        guard let data = item as? Data else {
+            throw OrganizerError.persistenceFailure("Keychain returned unexpected key format.")
+        }
+        return data
+#else
+        return nil
+#endif
+    }
+
+    private func saveKeyDataToKeychain(_ keyData: Data) throws {
+#if canImport(Security)
+        let account = try keychainAccountIdentifier()
+        let identityQuery: [String: Any] = [
+            kSecClass as String: kSecClassGenericPassword,
+            kSecAttrService as String: Self.keychainServiceName,
+            kSecAttrAccount as String: account
+        ]
+
+        let existingStatus = SecItemCopyMatching(identityQuery as CFDictionary, nil)
+        if existingStatus == errSecSuccess {
+            let updateAttrs: [String: Any] = [
+                kSecValueData as String: keyData
+            ]
+            let updateStatus = SecItemUpdate(identityQuery as CFDictionary, updateAttrs as CFDictionary)
+            guard updateStatus == errSecSuccess else {
+                throw OrganizerError.persistenceFailure("Unable to update keychain state key (status \(updateStatus)).")
+            }
+            return
+        }
+
+        if existingStatus != errSecItemNotFound {
+            throw OrganizerError.persistenceFailure("Unable to query keychain state key (status \(existingStatus)).")
+        }
+
+        var addQuery = identityQuery
+        addQuery[kSecAttrAccessible as String] = kSecAttrAccessibleAfterFirstUnlockThisDeviceOnly
+        addQuery[kSecValueData as String] = keyData
+        let addStatus = SecItemAdd(addQuery as CFDictionary, nil)
+        guard addStatus == errSecSuccess else {
+            throw OrganizerError.persistenceFailure("Unable to store keychain state key (status \(addStatus)).")
+        }
+#else
+        _ = keyData
+        throw OrganizerError.persistenceFailure("Keychain storage is unavailable on this platform.")
+#endif
     }
 }

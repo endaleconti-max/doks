@@ -20,6 +20,9 @@ public enum DocumentIngestionError: Error, LocalizedError {
     case unsupportedFileType(String)
     case unreadableData
     case ocrUnavailable
+    case docxArchiveTooLarge(maxBytes: Int)
+    case docxContentTooLarge(maxBytes: Int)
+    case docxExtractionTimedOut(timeoutSeconds: TimeInterval)
 
     public var errorDescription: String? {
         switch self {
@@ -29,11 +32,21 @@ public enum DocumentIngestionError: Error, LocalizedError {
             return "Unable to decode file data as text."
         case .ocrUnavailable:
             return "OCR is unavailable on this platform for image documents."
+        case .docxArchiveTooLarge(let maxBytes):
+            return "DOCX archive exceeds size limit of \(maxBytes) bytes."
+        case .docxContentTooLarge(let maxBytes):
+            return "Extracted DOCX XML exceeds size limit of \(maxBytes) bytes."
+        case .docxExtractionTimedOut(let timeoutSeconds):
+            return "DOCX extraction timed out after \(Int(timeoutSeconds)) seconds."
         }
     }
 }
 
 public struct DocumentIngestionService: DocumentIngestionProviding {
+    private static let maxDOCXArchiveBytes = 10_000_000
+    private static let maxDOCXXMLBytes = 8_000_000
+    private static let docxExtractionTimeoutSeconds: TimeInterval = 10
+
     private let supportedExtensions: Set<String> = [
         "txt", "md", "csv", "rtf", "json", "xml", "html", "pdf", "docx",
         "png", "jpg", "jpeg", "tif", "tiff", "heic", "heif", "gif", "bmp"
@@ -101,20 +114,31 @@ public struct DocumentIngestionService: DocumentIngestionProviding {
 
     private func extractDOCXText(from fileURL: URL) throws -> String {
 #if os(macOS)
+        if let size = try? fileSizeBytes(at: fileURL), size > Self.maxDOCXArchiveBytes {
+            throw DocumentIngestionError.docxArchiveTooLarge(maxBytes: Self.maxDOCXArchiveBytes)
+        }
+
         let process = Process()
         let stdout = Pipe()
-        let stderr = Pipe()
 
         process.executableURL = URL(fileURLWithPath: "/usr/bin/unzip")
         process.arguments = ["-p", fileURL.path, "word/document.xml"]
         process.standardOutput = stdout
-        process.standardError = stderr
+        process.standardError = FileHandle.nullDevice
 
         do {
             try process.run()
-            process.waitUntilExit()
         } catch {
             throw DocumentIngestionError.unreadableData
+        }
+
+        let startedAt = Date()
+        while process.isRunning {
+            if Date().timeIntervalSince(startedAt) > Self.docxExtractionTimeoutSeconds {
+                process.terminate()
+                throw DocumentIngestionError.docxExtractionTimedOut(timeoutSeconds: Self.docxExtractionTimeoutSeconds)
+            }
+            Thread.sleep(forTimeInterval: 0.05)
         }
 
         guard process.terminationStatus == 0 else {
@@ -124,6 +148,9 @@ public struct DocumentIngestionService: DocumentIngestionProviding {
         let data = stdout.fileHandleForReading.readDataToEndOfFile()
         guard !data.isEmpty else {
             throw DocumentIngestionError.unreadableData
+        }
+        if data.count > Self.maxDOCXXMLBytes {
+            throw DocumentIngestionError.docxContentTooLarge(maxBytes: Self.maxDOCXXMLBytes)
         }
 
         let xml = String(data: data, encoding: .utf8)
@@ -230,5 +257,10 @@ public struct DocumentIngestionService: DocumentIngestionProviding {
 #else
         throw DocumentIngestionError.ocrUnavailable
 #endif
+    }
+
+    private func fileSizeBytes(at url: URL) throws -> Int {
+        let values = try url.resourceValues(forKeys: [.fileSizeKey])
+        return values.fileSize ?? 0
     }
 }
