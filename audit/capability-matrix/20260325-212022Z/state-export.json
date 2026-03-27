@@ -1,0 +1,71 @@
+{
+  "documents" : [
+    {
+      "categoryResult" : {
+        "category" : "invoice",
+        "confidence" : 0.95,
+        "explanation" : "Matched category signals such as 'payment terms'."
+      },
+      "contentHash" : "aaed6ea7b8295636ec139c4d33d6c0f59eca1cb6df5a307b1222d768963da98f",
+      "contentPreview" : "Stored preview disabled by privacy policy.",
+      "correction" : {
+        "correctedAt" : "2026-03-25T21:20:29Z",
+        "newCategory" : "contract",
+        "previousCategory" : "invoice",
+        "reason" : "Capability matrix recategorization test"
+      },
+      "fileName" : "invoice.txt",
+      "filePath" : ".\/samples\/invoice.txt",
+      "id" : "76B205CF-1FB8-4DB8-BA7B-6BB5C033E6F1",
+      "importedAt" : "2026-03-25T21:20:26Z"
+    }
+  ],
+  "events" : [
+    {
+      "actor" : "system",
+      "detail" : "Document imported with category invoice.",
+      "documentID" : "76B205CF-1FB8-4DB8-BA7B-6BB5C033E6F1",
+      "eventType" : "imported",
+      "fileName" : "invoice.txt",
+      "id" : "835FDD65-AE1A-4739-A484-88A06A18E9EB",
+      "timestamp" : "2026-03-25T21:20:26Z"
+    },
+    {
+      "actor" : "system",
+      "detail" : "Document imported with category resume.",
+      "documentID" : "D95D0228-1835-41BF-B1D6-3E4D6B8116AE",
+      "eventType" : "imported",
+      "fileName" : "resume.txt",
+      "id" : "92BA027E-1AE0-41AE-9674-1C46151916AD",
+      "timestamp" : "2026-03-25T21:20:26Z"
+    },
+    {
+      "actor" : "user",
+      "detail" : "Category changed from invoice to contract: Capability matrix recategorization test",
+      "documentID" : "76B205CF-1FB8-4DB8-BA7B-6BB5C033E6F1",
+      "eventType" : "recategorized",
+      "fileName" : "invoice.txt",
+      "id" : "E2B7CF65-1DD6-4ADE-BD28-73A300A39068",
+      "timestamp" : "2026-03-25T21:20:29Z"
+    },
+    {
+      "actor" : "user",
+      "detail" : "Document removed from organizer state.",
+      "documentID" : "D95D0228-1835-41BF-B1D6-3E4D6B8116AE",
+      "eventType" : "deleted",
+      "fileName" : "resume.txt",
+      "id" : "E377A113-8335-459E-A079-CA132B006AAC",
+      "timestamp" : "2026-03-25T21:20:31Z"
+    },
+    {
+      "actor" : "system",
+      "detail" : "Audit timeline exported to \/Users\/endaleconti\/git folder\/Documents App\/audit\/capability-matrix\/20260325-212022Z\/timeline-export.json.",
+      "eventType" : "exported",
+      "id" : "0A7AF966-3116-4549-ADF1-E6E453DDC069",
+      "timestamp" : "2026-03-25T21:20:32Z"
+    }
+  ],
+  "grantedPluginPermissions" : {
+
+  }
+}

@@ -1,0 +1,38 @@
+[
+  {
+    "actor" : "user",
+    "detail" : "Document removed from organizer state.",
+    "documentID" : "8D7F7530-B099-4F48-9A01-6FE18D3C0393",
+    "eventType" : "deleted",
+    "fileName" : "resume.txt",
+    "id" : "AFE6735F-EB23-478C-8ED8-7CBFD2C5FFC1",
+    "timestamp" : "2026-03-25T21:20:50Z"
+  },
+  {
+    "actor" : "user",
+    "detail" : "Category changed from invoice to contract: Capability matrix recategorization test",
+    "documentID" : "384FCD13-39B8-4939-B9DA-9D58ECE9D08B",
+    "eventType" : "recategorized",
+    "fileName" : "invoice.txt",
+    "id" : "7906327B-685A-4258-B1A2-A0F3BCAE833E",
+    "timestamp" : "2026-03-25T21:20:48Z"
+  },
+  {
+    "actor" : "system",
+    "detail" : "Document imported with category invoice.",
+    "documentID" : "384FCD13-39B8-4939-B9DA-9D58ECE9D08B",
+    "eventType" : "imported",
+    "fileName" : "invoice.txt",
+    "id" : "3D695271-C585-4556-B7C6-DF7D3AFA7B8A",
+    "timestamp" : "2026-03-25T21:20:45Z"
+  },
+  {
+    "actor" : "system",
+    "detail" : "Document imported with category resume.",
+    "documentID" : "8D7F7530-B099-4F48-9A01-6FE18D3C0393",
+    "eventType" : "imported",
+    "fileName" : "resume.txt",
+    "id" : "9E520D5D-9B9C-4F53-BF36-86634C38EF50",
+    "timestamp" : "2026-03-25T21:20:45Z"
+  }
+]
