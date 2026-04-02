@@ -47,7 +47,7 @@
 		{
 			"label": "Kill and Relaunch App",
 			"type": "shell",
-			"command": "pkill -x DocumentOrganizerMacApp 2>/dev/null; sleep 1 && swift run DocumentOrganizerMacApp &",
+			"command": "pkill -x DocumentOrganizerMacApp 2>/dev/null; sleep 1 && nohup swift run DocumentOrganizerMacApp >/tmp/DocumentOrganizerMacApp.log 2>&1 &",
 			"isBackground": true,
 			"problemMatcher": [],
 			"options": {
@@ -77,7 +77,7 @@
 		{
 			"label": "Launch App",
 			"type": "shell",
-			"command": "swift run DocumentOrganizerMacApp &",
+			"command": "nohup swift run DocumentOrganizerMacApp >/tmp/DocumentOrganizerMacApp.log 2>&1 &",
 			"isBackground": true,
 			"problemMatcher": [],
 			"options": {
