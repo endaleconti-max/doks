@@ -8,8 +8,17 @@ FALLBACK_PREFIX="${AUTO_COMMIT_FALLBACK_PREFIX:-autosync}"
 push_with_fallback() {
   local branch="$1"
   local push_output
+  local upstream_ref
+  local upstream_remote="origin"
+  local upstream_branch="$branch"
 
-  if push_output="$(git push 2>&1)"; then
+  upstream_ref="$(git rev-parse --abbrev-ref --symbolic-full-name "@{u}" 2>/dev/null || true)"
+  if [[ -n "${upstream_ref}" && "${upstream_ref}" == */* ]]; then
+    upstream_remote="${upstream_ref%%/*}"
+    upstream_branch="${upstream_ref#*/}"
+  fi
+
+  if push_output="$(git push "${upstream_remote}" "HEAD:refs/heads/${upstream_branch}" 2>&1)"; then
     echo "[auto-commit] Commit and push succeeded."
     return 0
   fi
@@ -17,7 +26,7 @@ push_with_fallback() {
   if [[ "${push_output}" =~ GH006|protected\ branch|pull\ request|Required\ status\ check ]]; then
     local fallback_branch="${FALLBACK_PREFIX}/${branch}"
     echo "[auto-commit] Protected branch detected; pushing to ${fallback_branch} instead."
-    if git push -u origin "HEAD:refs/heads/${fallback_branch}"; then
+    if git push -u "${upstream_remote}" "HEAD:refs/heads/${fallback_branch}"; then
       echo "[auto-commit] Pushed to fallback branch ${fallback_branch}."
       return 0
     fi
@@ -26,7 +35,7 @@ push_with_fallback() {
   fi
 
   echo "[auto-commit] Push failed; trying pull --rebase --autostash then push."
-  if git pull --rebase --autostash && git push; then
+  if git pull --rebase --autostash && git push "${upstream_remote}" "HEAD:refs/heads/${upstream_branch}"; then
     echo "[auto-commit] Recovered from remote divergence and pushed."
     return 0
   fi
@@ -61,7 +70,7 @@ while true; do
       branch="$(git rev-parse --abbrev-ref HEAD)"
 
       if git rev-parse --abbrev-ref --symbolic-full-name "@{u}" >/dev/null 2>&1; then
-        push_with_fallback "${branch}"
+        push_with_fallback "${branch}" || true
       else
         if git push -u origin "${branch}"; then
           echo "[auto-commit] Set upstream and pushed branch ${branch}."
