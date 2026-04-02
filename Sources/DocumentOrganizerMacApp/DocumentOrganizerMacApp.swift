@@ -67,6 +67,33 @@ private struct MainWindowContentView: View {
                     endPoint: .bottomTrailing
                 )
                 .ignoresSafeArea()
+
+                Rectangle()
+                    .fill(.ultraThinMaterial)
+                    .opacity(0.42)
+                    .ignoresSafeArea()
+
+                LinearGradient(
+                    colors: [
+                        Color.white.opacity(0.26),
+                        Color.white.opacity(0.06),
+                        Color.clear
+                    ],
+                    startPoint: .topLeading,
+                    endPoint: .bottomTrailing
+                )
+                .ignoresSafeArea()
+
+                RadialGradient(
+                    colors: [
+                        Color.white.opacity(0.22),
+                        Color.clear
+                    ],
+                    center: .topLeading,
+                    startRadius: 30,
+                    endRadius: 620
+                )
+                .ignoresSafeArea()
             }
             // Top-right: standalone search bar aligned to pill grid bounds
             .overlay(alignment: .topTrailing) {
