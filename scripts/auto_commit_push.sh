@@ -3,6 +3,37 @@ set -euo pipefail
 
 INTERVAL_SECONDS="${AUTO_COMMIT_INTERVAL_SECONDS:-120}"
 COMMIT_PREFIX="${AUTO_COMMIT_MESSAGE_PREFIX:-chore(auto):}"
+FALLBACK_PREFIX="${AUTO_COMMIT_FALLBACK_PREFIX:-autosync}"
+
+push_with_fallback() {
+  local branch="$1"
+  local push_output
+
+  if push_output="$(git push 2>&1)"; then
+    echo "[auto-commit] Commit and push succeeded."
+    return 0
+  fi
+
+  if [[ "${push_output}" =~ GH006|protected\ branch|pull\ request|Required\ status\ check ]]; then
+    local fallback_branch="${FALLBACK_PREFIX}/${branch}"
+    echo "[auto-commit] Protected branch detected; pushing to ${fallback_branch} instead."
+    if git push -u origin "HEAD:refs/heads/${fallback_branch}"; then
+      echo "[auto-commit] Pushed to fallback branch ${fallback_branch}."
+      return 0
+    fi
+    echo "[auto-commit] Fallback push failed; will retry on next cycle."
+    return 1
+  fi
+
+  echo "[auto-commit] Push failed; trying pull --rebase --autostash then push."
+  if git pull --rebase --autostash && git push; then
+    echo "[auto-commit] Recovered from remote divergence and pushed."
+    return 0
+  fi
+
+  echo "[auto-commit] Push still failing; will retry on next cycle."
+  return 1
+}
 
 if ! command -v git >/dev/null 2>&1; then
   echo "[auto-commit] git is not available in PATH."
@@ -30,19 +61,18 @@ while true; do
       branch="$(git rev-parse --abbrev-ref HEAD)"
 
       if git rev-parse --abbrev-ref --symbolic-full-name "@{u}" >/dev/null 2>&1; then
-        if ! git push; then
-          echo "[auto-commit] Push failed; trying pull --rebase --autostash then push."
-          if git pull --rebase --autostash && git push; then
-            echo "[auto-commit] Recovered from remote divergence and pushed."
-          else
-            echo "[auto-commit] Push still failing; will retry on next cycle."
-          fi
-        else
-          echo "[auto-commit] Commit and push succeeded (${commit_message})."
-        fi
+        push_with_fallback "${branch}"
       else
         if git push -u origin "${branch}"; then
           echo "[auto-commit] Set upstream and pushed branch ${branch}."
+        elif [[ "${branch}" == "main" || "${branch}" == "master" ]]; then
+          fallback_branch="${FALLBACK_PREFIX}/${branch}"
+          echo "[auto-commit] Upstream push blocked; using fallback branch ${fallback_branch}."
+          if git push -u origin "HEAD:refs/heads/${fallback_branch}"; then
+            echo "[auto-commit] Set upstream and pushed fallback branch ${fallback_branch}."
+          else
+            echo "[auto-commit] Could not push fallback branch ${fallback_branch}; retrying later."
+          fi
         else
           echo "[auto-commit] Could not set upstream for ${branch}; retrying later."
         fi
