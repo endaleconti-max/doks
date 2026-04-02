@@ -372,7 +372,41 @@ private struct MainWindowContentView: View {
         }
         .frame(maxWidth: .infinity, minHeight: pillMinHeight, alignment: .topLeading)
         .padding(10)
-        .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: 10))
+        .background {
+            RoundedRectangle(cornerRadius: 10)
+                // Transparent base — shows canvas gradient through
+                .fill(Color.white.opacity(0.06))
+                // Metallic diagonal sheen (top-left highlight → bottom-right shadow)
+                .overlay {
+                    RoundedRectangle(cornerRadius: 10)
+                        .fill(
+                            LinearGradient(
+                                colors: [
+                                    Color.white.opacity(0.20),
+                                    Color.white.opacity(0.02)
+                                ],
+                                startPoint: .topLeading,
+                                endPoint: .bottomTrailing
+                            )
+                        )
+                }
+                // Metallic bevel border: bright top-left edge, dim bottom-right edge
+                .overlay {
+                    RoundedRectangle(cornerRadius: 10)
+                        .strokeBorder(
+                            LinearGradient(
+                                colors: [
+                                    Color.white.opacity(0.50),
+                                    Color.white.opacity(0.08)
+                                ],
+                                startPoint: .topLeading,
+                                endPoint: .bottomTrailing
+                            ),
+                            lineWidth: 0.75
+                        )
+                }
+        }
+        .shadow(color: Color.black.opacity(0.18), radius: 6, x: 0, y: 3)
     }
 
     private var statusFeedbackText: String {
