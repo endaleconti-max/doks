@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-03-26T21:50:30.628806+00:00",
+  "generatedAt": "2026-03-28T09:47:10.865987+00:00",
   "packagePath": "/Users/endaleconti/git folder/Documents App",
   "checks": {
     "seed_import_succeeds": true,
@@ -15,7 +15,7 @@
   },
   "details": {
     "seed_import": "ok",
-    "baseline_state_health": "ok (duration=0.006s)",
+    "baseline_state_health": "ok (duration=0.015s)",
     "degraded_state_health": "ok",
     "recovery_reimport": "ok",
     "recovered_state_health": "ok"

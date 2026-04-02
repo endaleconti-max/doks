@@ -3,599 +3,628 @@ import AppKit
 import Core
 import Foundation
 import SwiftUI
+import SystemConfiguration
 import UniformTypeIdentifiers
 
 extension DocumentRecord: Identifiable {}
 
+// MARK: - App Entry
+
 @main
 struct DocumentOrganizerMacApp: App {
     @StateObject private var model = DocumentOrganizerViewModel()
-    @State private var isDropTargeted = false
 
     var body: some Scene {
+        // MARK: Main Window
         WindowGroup("DocumentOrganizer", id: "main-window") {
-            ZStack {
-                LinearGradient(
-                    colors: [Color(nsColor: .windowBackgroundColor), Color(nsColor: .underPageBackgroundColor)],
-                    startPoint: .topLeading,
-                    endPoint: .bottomTrailing
-                )
-                .ignoresSafeArea()
-
-                NavigationSplitView {
-                    sidebar
-                } detail: {
-                    detail
-                }
-                .frame(minWidth: 980, minHeight: 620)
-                .searchable(text: $model.searchQuery, prompt: "Search documents")
-                .toolbar {
-                    ToolbarItemGroup {
-                        Button("Import") {
-                            model.importDocumentsFromOpenPanel()
-                        }
-
-                        Button("Refresh") {
-                            model.refresh()
-                        }
-
-                        Button("Delete") {
-                            model.deleteSelectedDocument()
-                        }
-                        .disabled(model.selectedDocument == nil)
-
-                        Divider()
-
-                        Button("Settings", systemImage: "gearshape") {
-                            NSApp.sendAction(Selector(("showSettingsWindow:")), to: nil, from: nil)
-                        }
-                    }
-                }
-
-                if isDropTargeted {
-                    RoundedRectangle(cornerRadius: 14)
-                        .strokeBorder(style: StrokeStyle(lineWidth: 3, dash: [8]))
-                        .foregroundStyle(Color.accentColor)
-                        .padding(18)
-
-                    VStack(spacing: 8) {
-                        Image(systemName: "square.and.arrow.down")
-                            .font(.system(size: 34, weight: .semibold))
-                        Text("Drop files to import")
-                            .font(.headline)
-                    }
-                    .padding(16)
-                    .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: 12))
-                }
-            }
-            .onDrop(of: [UTType.fileURL], isTargeted: $isDropTargeted) { providers in
-                model.importDocuments(fromDroppedProviders: providers)
-            }
-            .alert(
-                "DocumentOrganizer Error",
-                isPresented: Binding(
-                    get: { model.errorMessage != nil },
-                    set: { newValue in
-                        if !newValue {
-                            model.errorMessage = nil
-                        }
-                    }
-                ),
-                actions: {
-                    Button("OK", role: .cancel) {
-                        model.errorMessage = nil
-                    }
-                },
-                message: {
-                    Text(model.errorMessage ?? "Unknown error")
-                }
-            )
+            MainWindowContentView(model: model)
         }
+        .windowStyle(.hiddenTitleBar)
         .windowResizability(.contentSize)
 
+        // MARK: Settings Window
         Settings {
             SettingsView()
         }
 
+        // MARK: Menu Bar
         MenuBarExtra("DocumentOrganizer", systemImage: "menubar.dock.rectangle") {
             MenuBarDashboardView(model: model)
         }
     }
+}
 
-    private var sidebar: some View {
-        VStack(alignment: .leading, spacing: 16) {
-            metricsPanel
+// MARK: - Main Window Content
 
-            if let successMessage = model.successMessage {
-                Text(successMessage)
-                    .font(.caption)
-                    .foregroundStyle(.mint)
-                    .padding(.horizontal, 10)
-                    .padding(.vertical, 6)
-                    .background(Color.mint.opacity(0.12), in: Capsule())
-            }
+private struct MainWindowContentView: View {
+    @ObservedObject var model: DocumentOrganizerViewModel
+    @State private var supportMessageDraft = ""
+    @State private var supportReply = "Ask us anything."
 
-            List(model.filteredDocuments, selection: $model.selectedDocumentID) { record in
-                documentRow(record)
-                .tag(record.id)
-                .listRowSeparator(.hidden)
-                .listRowBackground(Color.clear)
-            }
-            .listStyle(.plain)
-            .overlay {
-                if model.filteredDocuments.isEmpty {
-                    emptyState(
-                        title: "No Documents",
-                        systemImage: "doc.text.magnifyingglass",
-                        description: "Import files to build a local, privacy-first document index."
-                    )
-                }
-            }
-        }
-        .padding()
+    private let outerInset: CGFloat = 24
+    private let rightInset: CGFloat = 48
+    private let leftActionColumnWidth: CGFloat = 220
+    private let panelMinWidth: CGFloat = 320
+    private let panelMaxWidth: CGFloat = 760
+    private let pillSpacing: CGFloat = 20
+    private let searchBarTopPadding: CGFloat = 10
+    private let searchBarHeight: CGFloat = 44
+    private let searchBarToGridSpacing: CGFloat = 16
+    private let pillMinHeight: CGFloat = 68
+
+    private func openSettings() {
+        NSApplication.shared.sendAction(Selector(("showSettingsWindow:")), to: nil, from: nil)
     }
 
-    private var detail: some View {
-        Group {
-            if let record = model.selectedDocument {
-                ScrollView {
-                    VStack(alignment: .leading, spacing: 18) {
-                        VStack(alignment: .leading, spacing: 6) {
-                            Text(record.fileName)
-                                .font(.largeTitle)
-                                .bold()
-                            Text(record.filePath)
-                                .font(.callout)
-                                .foregroundStyle(.secondary)
-                                .textSelection(.enabled)
-                        }
+    var body: some View {
+        GeometryReader { geometry in
+            let panelWidth = rightPanelWidth(for: geometry.size.width)
 
-                        HStack(spacing: 18) {
-                            infoChip(title: "Category", value: record.effectiveCategory.rawValue.capitalized)
-                            infoChip(title: "Confidence", value: String(format: "%.0f%%", record.categoryResult.confidence * 100))
-                            infoChip(title: "Imported", value: record.importedAt.formatted(date: .abbreviated, time: .shortened))
-                        }
-
-                        premiumPanel("Why it was categorized this way") {
-                            Text(record.categoryResult.explanation)
-                                .foregroundStyle(.secondary)
-                        }
-
-                        premiumPanel("Preview") {
-                            Text(record.contentPreview)
-                                .textSelection(.enabled)
-                                .frame(maxWidth: .infinity, alignment: .leading)
-                                .padding(12)
-                                .background(Color.primary.opacity(0.05), in: RoundedRectangle(cornerRadius: 10))
-                        }
-
-                        premiumPanel("Manual Review") {
-                            Picker("Category", selection: $model.selectedCategory) {
-                                ForEach(DocumentCategory.allCases, id: \.self) { category in
-                                    Text(category.rawValue.capitalized).tag(category)
-                                }
-                            }
-                            .pickerStyle(.menu)
-
-                            TextField("Reason for recategorization", text: $model.recategorizationReason)
-
-                            Button("Apply Category Update") {
-                                model.recategorizeSelectedDocument()
-                            }
-                            .buttonStyle(.borderedProminent)
-                            .disabled(model.selectedDocument == nil)
-                        }
-
-                        premiumPanel("State Storage") {
-                            Text(model.stateLocationText)
-                                .font(.callout)
-                                .foregroundStyle(.secondary)
-                                .textSelection(.enabled)
-                        }
-                    }
-                    .padding(24)
-                }
-            } else {
-                emptyState(
-                    title: "Select a Document",
-                    systemImage: "doc.richtext",
-                    description: "Choose a document from the sidebar to inspect its category, preview, and review actions."
+            ZStack {
+                LinearGradient(
+                    colors: AppTheme.canvasGradient,
+                    startPoint: .topLeading,
+                    endPoint: .bottomTrailing
                 )
+                .ignoresSafeArea()
             }
-        }
-        .onChange(of: model.selectedDocumentID) { _ in
-            model.syncSelectedCategory()
-        }
-    }
-
-    private var metricsPanel: some View {
-        VStack(alignment: .leading, spacing: 10) {
-            HStack {
-                VStack(alignment: .leading, spacing: 2) {
-                    Text("Organizer Overview")
-                        .font(.title3.weight(.semibold))
-                    Text("Local-first intelligence")
-                        .font(.caption)
+            // Top-right: standalone search bar aligned to pill grid bounds
+            .overlay(alignment: .topTrailing) {
+                HStack(spacing: 10) {
+                    Image(systemName: "magnifyingglass")
                         .foregroundStyle(.secondary)
+                    TextField("Search documents", text: $model.searchQuery)
+                        .textFieldStyle(.plain)
+                        .foregroundStyle(.white)
                 }
-                Spacer()
+                .font(.caption)
+                .padding(.vertical, 10)
+                .padding(.horizontal, 14)
+                .frame(width: panelWidth, alignment: .leading)
+                .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: 10))
+                .padding(.top, searchBarTopPadding)
+                .padding(.trailing, rightInset)
+            }
+            // Top-left: Import + Turbo buttons
+            .overlay(alignment: .topLeading) {
+                VStack(alignment: .leading, spacing: 12) {
+                    Button {
+                        model.importFolderFromOpenPanel()
+                    } label: {
+                        Label("Import", systemImage: "folder.badge.plus")
+                            .font(.system(size: 18, weight: .semibold))
+                            .foregroundStyle(.white)
+                            .frame(maxWidth: .infinity, alignment: .leading)
+                            .padding(.vertical, 12)
+                            .padding(.horizontal, 14)
+                    }
+                    .buttonStyle(.plain)
+
+                    Button {
+                        model.startFolderWatching()
+                    } label: {
+                        Label("Turbo", systemImage: "bolt.fill")
+                            .font(.system(size: 18, weight: .semibold))
+                            .foregroundStyle(.white)
+                            .frame(maxWidth: .infinity, alignment: .leading)
+                            .padding(.vertical, 12)
+                            .padding(.horizontal, 14)
+                    }
+                    .buttonStyle(.plain)
+
+                }
+                .frame(width: leftActionColumnWidth, alignment: .leading)
+                .padding(.top, outerInset)
+                .padding(.leading, outerInset)
+            }
+            // Top-right: responsive pill grid
+            .overlay(alignment: .topTrailing) {
+                LazyVGrid(columns: pillGridColumns(for: panelWidth), alignment: .trailing, spacing: pillSpacing) {
+                    pillGridContent
+                }
+                .frame(width: panelWidth)
+                .padding(.trailing, rightInset)
+                .padding(.top, searchBarTopPadding + searchBarHeight + searchBarToGridSpacing)
+            }
+            // Bottom-left: support chat (above quick links bar)
+            .overlay(alignment: .bottomLeading) {
+                supportChatCard
+                    .padding(.leading, outerInset)
+                    .padding(.bottom, 70)
+            }
+            // Bottom center: quick links
+            .overlay(alignment: .bottom) {
+                quickLinksBar
+                    .padding(.bottom, 20)
+            }
+            .background(WindowTitleBarConfigurator())
+            .alert("DocumentOrganizer Error",
+                isPresented: Binding(
+                    get: { model.errorMessage != nil },
+                    set: { if !$0 { model.errorMessage = nil } }
+                ),
+                actions: { Button("OK", role: .cancel) { model.errorMessage = nil } },
+                message: { Text(model.errorMessage ?? "Unknown error") }
+            )
+        }
+    }
+
+    @ViewBuilder
+    private var pillGridContent: some View {
+        pillContainer {
+            Button {
+                openSettings()
+            } label: {
+                Label("Settings", systemImage: "gearshape")
+                    .font(.caption.weight(.semibold))
+                    .foregroundStyle(.white)
+            }
+            .buttonStyle(.plain)
+        }
+
+        pillContainer(alignment: .leading, spacing: 12) {
+            HStack(spacing: 8) {
                 Circle()
-                    .fill(model.isStateHealthy ? Color.mint.opacity(0.2) : Color.orange.opacity(0.2))
-                    .overlay(
-                        Image(systemName: model.isStateHealthy ? "checkmark.seal.fill" : "exclamationmark.triangle.fill")
-                            .foregroundStyle(model.isStateHealthy ? .mint : .orange)
-                    )
-                    .frame(width: 28, height: 28)
-            }
-
-            HStack(spacing: 12) {
-                metricCard(title: "Documents", value: String(model.totalDocuments))
-                metricCard(title: "Categories", value: String(model.activeCategoryCount))
-                metricCard(title: "Healthy", value: model.isStateHealthy ? "Yes" : "No")
-            }
-
-            VStack(alignment: .leading, spacing: 8) {
-                HStack {
-                    Text("Folder Organization")
-                        .font(.subheadline)
-                        .bold()
-
-                    Spacer()
-
-                    Button(model.isFolderWatchingEnabled ? "Disable" : "Enable") {
-                        model.toggleFolderWatching()
-                    }
+                    .fill(model.isNetworkConnected ? Color.green : Color.gray)
+                    .frame(width: 8, height: 8)
+                Text(model.isNetworkConnected ? "Connected" : "Offline")
                     .font(.caption)
-                    .controlSize(.small)
-                }
-
-                if model.isFolderWatchingEnabled {
-                    VStack(alignment: .leading, spacing: 6) {
-                        Text("Organized Files")
-                            .font(.caption)
-                            .foregroundStyle(.secondary)
-
-                        if model.folderStatistics.isEmpty {
-                            Text("No organized files yet")
-                                .font(.caption2)
-                                .foregroundStyle(.secondary)
-                        } else {
-                            VStack(alignment: .leading, spacing: 4) {
-                                ForEach(model.folderStatistics, id: \.category) { stat in
-                                    HStack {
-                                        Circle()
-                                            .fill(model.riskColor(for: stat.category))
-                                            .frame(width: 8, height: 8)
-
-                                        Text(stat.category.rawValue.capitalized)
-                                            .font(.caption)
-
-                                        Spacer()
-
-                                        VStack(alignment: .trailing, spacing: 2) {
-                                            Text("\(stat.fileCount) file\(stat.fileCount == 1 ? "" : "s")")
-                                                .font(.caption2)
-                                                .foregroundStyle(.secondary)
-
-                                            Text(stat.totalSizeString)
-                                                .font(.caption2)
-                                                .foregroundStyle(.tertiary)
-                                        }
-                                    }
-                                }
-                            }
-                        }
-
-                        if let root = model.organizationRoot {
-                            Button("Open Organization Folder", systemImage: "folder") {
-                                NSWorkspace.shared.open(root)
-                            }
-                            .font(.caption)
-                            .buttonStyle(.bordered)
-                            .controlSize(.small)
-                        }
-                    }
-                    .padding(10)
-                    .background(Color.primary.opacity(0.04), in: RoundedRectangle(cornerRadius: 10))
-                }
+                    .foregroundStyle(.white)
             }
-        }
-        .padding(14)
-        .background(.regularMaterial, in: RoundedRectangle(cornerRadius: 14, style: .continuous))
-    }
-
-    private func metricCard(title: String, value: String) -> some View {
-        VStack(alignment: .leading, spacing: 4) {
-            Text(title)
-                .font(.caption)
-                .foregroundStyle(.secondary)
-            Text(value)
-                .font(.title3.weight(.semibold))
-        }
-        .frame(maxWidth: .infinity, alignment: .leading)
-        .padding(12)
-        .background(Color.primary.opacity(0.05), in: RoundedRectangle(cornerRadius: 10, style: .continuous))
-    }
-
-    private func infoChip(title: String, value: String) -> some View {
-        VStack(alignment: .leading, spacing: 4) {
-            Text(title)
-                .font(.caption)
-                .foregroundStyle(.secondary)
-            Text(value)
-                .font(.body)
-                .bold()
-        }
-        .padding(.horizontal, 12)
-        .padding(.vertical, 10)
-        .background(.regularMaterial, in: Capsule())
-    }
-
-    private func emptyState(title: String, systemImage: String, description: String) -> some View {
-        VStack(spacing: 10) {
-            Image(systemName: systemImage)
-                .font(.system(size: 30))
-                .foregroundStyle(.tertiary)
-            Text(title)
-                .font(.title3.weight(.semibold))
-            Text(description)
-                .font(.callout)
-                .foregroundStyle(.secondary)
-                .multilineTextAlignment(.center)
-        }
-        .frame(maxWidth: .infinity, maxHeight: .infinity)
-        .padding(24)
-    }
-
-    private func premiumPanel<Content: View>(_ title: String, @ViewBuilder content: () -> Content) -> some View {
-        VStack(alignment: .leading, spacing: 8) {
-            Text(title)
-                .font(.headline)
-            content()
-        }
-        .frame(maxWidth: .infinity, alignment: .leading)
-        .padding(14)
-        .background(.regularMaterial, in: RoundedRectangle(cornerRadius: 12, style: .continuous))
-    }
-
-    private func documentRow(_ record: DocumentRecord) -> some View {
-        HStack(spacing: 10) {
-            RoundedRectangle(cornerRadius: 3)
-                .fill(model.riskColor(for: record.effectiveCategory))
-                .frame(width: 4)
 
             VStack(alignment: .leading, spacing: 4) {
-                Text(record.fileName)
-                    .font(.headline)
-                    .lineLimit(1)
-                HStack(spacing: 8) {
-                    Text(record.effectiveCategory.rawValue.capitalized)
+                Text("Storage")
+                    .font(.caption2)
+                    .foregroundStyle(.secondary)
+                HStack(spacing: 4) {
+                    Text(model.storageAvailable)
+                        .font(.caption)
+                        .foregroundStyle(.white)
+                    Text("/")
+                        .font(.caption2)
+                        .foregroundStyle(.secondary)
+                    Text(model.storageTotal)
                         .font(.caption)
                         .foregroundStyle(.secondary)
-                    Text(record.importedAt, style: .date)
-                        .font(.caption2)
-                        .foregroundStyle(.tertiary)
                 }
             }
-            Spacer(minLength: 0)
         }
+
+        pillContainer(alignment: .leading, spacing: 8) {
+            VStack(alignment: .leading, spacing: 2) {
+                Text("Documents")
+                    .font(.caption2)
+                    .foregroundStyle(.secondary)
+                Text("\(model.totalDocuments) total · \(model.activeCategoryCount) categories")
+                    .font(.caption)
+                    .foregroundStyle(.white)
+            }
+
+            if !model.documents.isEmpty {
+                Divider().overlay(Color.white.opacity(0.2))
+
+                VStack(alignment: .leading, spacing: 4) {
+                    Text("Recent")
+                        .font(.caption2)
+                        .foregroundStyle(.secondary)
+                    ForEach(Array(model.documents.prefix(3))) { doc in
+                        HStack(spacing: 6) {
+                            Image(systemName: "doc.text")
+                                .font(.caption2)
+                                .foregroundStyle(.secondary)
+                            Text(doc.fileName)
+                                .font(.caption)
+                                .foregroundStyle(.white)
+                                .lineLimit(1)
+                        }
+                    }
+                }
+            }
+        }
+
+        pillContainer(alignment: .leading, spacing: 8) {
+            Text("Status / Feedback")
+                .font(.caption2)
+                .foregroundStyle(.secondary)
+            Text(statusFeedbackText)
+                .font(.caption)
+                .foregroundStyle(statusFeedbackColor)
+                .lineLimit(2)
+        }
+
+        pillContainer(alignment: .leading, spacing: 8) {
+            Text("Active Watched Folders")
+                .font(.caption2)
+                .foregroundStyle(.secondary)
+            Text(model.watchedFoldersSummary)
+                .font(.caption)
+                .foregroundStyle(.white)
+                .lineLimit(2)
+            Text(model.isFolderWatchingEnabled ? "Auto-watch: On" : "Auto-watch: Off")
+                .font(.caption2)
+                .foregroundStyle(.secondary)
+        }
+
+        pillContainer(alignment: .leading, spacing: 8) {
+            Text("Processing Activity")
+                .font(.caption2)
+                .foregroundStyle(.secondary)
+            HStack(spacing: 8) {
+                if model.isFolderWatchingEnabled {
+                    ProgressView()
+                        .controlSize(.small)
+                        .tint(.white)
+                } else {
+                    Circle()
+                        .fill(Color.gray)
+                        .frame(width: 8, height: 8)
+                }
+                Text(model.isFolderWatchingEnabled ? "Monitoring for new files" : "Idle")
+                    .font(.caption)
+                    .foregroundStyle(.white)
+            }
+        }
+
+        pillContainer(alignment: .leading, spacing: 8) {
+            Text("Quick Action 1")
+                .font(.caption2)
+                .foregroundStyle(.secondary)
+            Text("Action placeholder")
+                .font(.caption)
+                .foregroundStyle(.white)
+                .lineLimit(1)
+        }
+
+        pillContainer(alignment: .leading, spacing: 8) {
+            Text("Quick Action 2")
+                .font(.caption2)
+                .foregroundStyle(.secondary)
+            Text("Action placeholder")
+                .font(.caption)
+                .foregroundStyle(.white)
+                .lineLimit(1)
+        }
+    }
+
+    private func rightPanelWidth(for windowWidth: CGFloat) -> CGFloat {
+        let available = windowWidth - leftActionColumnWidth - rightInset - outerInset
+        return min(panelMaxWidth, max(panelMinWidth, available))
+    }
+
+    private func pillGridColumns(for panelWidth: CGFloat) -> [GridItem] {
+        if panelWidth >= 560 {
+            return [
+                GridItem(.flexible(minimum: 220), spacing: pillSpacing),
+                GridItem(.flexible(minimum: 220), spacing: pillSpacing),
+            ]
+        }
+        return [GridItem(.flexible(minimum: 220), spacing: pillSpacing)]
+    }
+
+    private var supportChatCard: some View {
+        VStack(alignment: .leading, spacing: 4) {
+            Text("Support Chat")
+                .font(.caption2)
+                .foregroundStyle(.secondary)
+                .frame(width: 130, alignment: .leading)
+
+            Text(supportReply)
+                .font(.caption2)
+                .foregroundStyle(.white)
+                .lineLimit(1)
+                .multilineTextAlignment(.leading)
+                .frame(width: 130, alignment: .leading)
+
+            TextField("Message support", text: $supportMessageDraft)
+                .textFieldStyle(.roundedBorder)
+                .font(.caption)
+                .frame(width: 130)
+                .frame(minHeight: 30)
+
+            Button("Send") {
+                sendSupportMessage()
+            }
+            .font(.caption.weight(.semibold))
+            .buttonStyle(.plain)
+            .foregroundStyle(.white)
+            .frame(width: 130, alignment: .leading)
+        }
+        .padding(12)
+        .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: 10))
+        .fixedSize(horizontal: true, vertical: false)
+    }
+
+    private var quickLinksBar: some View {
+        HStack(spacing: 16) {
+            quickLinkButton("FAQ")
+            quickLinkButton("Impressum")
+            quickLinkButton("Privacy")
+            quickLinkButton("Contact")
+        }
+        .font(.caption.weight(.semibold))
+        .padding(.vertical, 8)
+        .padding(.horizontal, 12)
+        .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: 10))
+    }
+
+    private func quickLinkButton(_ title: String) -> some View {
+        Button(title) {
+            supportReply = "\(title) link selected. Configure destination in app settings."
+        }
+        .buttonStyle(.plain)
+        .foregroundStyle(.white)
+    }
+
+    private func sendSupportMessage() {
+        let trimmed = supportMessageDraft.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !trimmed.isEmpty else { return }
+        supportReply = "Support received: \(trimmed)"
+        supportMessageDraft = ""
+    }
+
+    private func pillContainer<Content: View>(
+        alignment: HorizontalAlignment = .center,
+        spacing: CGFloat = 0,
+        @ViewBuilder content: () -> Content
+    ) -> some View {
+        VStack(alignment: alignment, spacing: spacing) {
+            content()
+        }
+        .frame(maxWidth: .infinity, minHeight: pillMinHeight, alignment: .topLeading)
         .padding(10)
-        .background(.regularMaterial, in: RoundedRectangle(cornerRadius: 10, style: .continuous))
+        .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: 10))
+    }
+
+    private var statusFeedbackText: String {
+        if let error = model.errorMessage, !error.isEmpty { return error }
+        if let success = model.successMessage, !success.isEmpty { return success }
+        return model.isStateHealthy ? "State healthy" : "State needs attention"
+    }
+
+    private var statusFeedbackColor: Color {
+        if model.errorMessage != nil { return .red }
+        if model.successMessage != nil { return .green }
+        return model.isStateHealthy ? .green : .orange
+    }
+
+}
+
+// MARK: - Window Chrome Configurator
+
+/// Removes the native macOS title bar, toolbar, and sidebar toggle.
+private struct WindowTitleBarConfigurator: NSViewRepresentable {
+    func makeNSView(context: Context) -> NSView {
+        let view = NSView()
+        DispatchQueue.main.async { configure(view.window) }
+        return view
+    }
+
+    func updateNSView(_ nsView: NSView, context: Context) {
+        DispatchQueue.main.async { configure(nsView.window) }
+    }
+
+    private func configure(_ window: NSWindow?) {
+        guard let window else { return }
+        window.titlebarAppearsTransparent = true
+        window.isMovableByWindowBackground = true
+        window.toolbar = nil
+        window.titleVisibility = .hidden
     }
 }
+
+// MARK: - Menu Bar Dashboard
 
 private struct MenuBarDashboardView: View {
     @ObservedObject var model: DocumentOrganizerViewModel
     @Environment(\.openWindow) private var openWindow
+
     @State private var quickSelectedDocumentID: UUID?
     @State private var quickSelectedCategory: DocumentCategory = .general
     @State private var quickReason = "Updated from menu bar"
 
+    // MARK: Body
+
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
-            VStack(alignment: .leading, spacing: 4) {
-                Text("DocumentOrganizer")
-                    .font(.headline.weight(.semibold))
-                Text("\(model.totalDocuments) documents across \(model.activeCategoryCount) active categories")
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
-            }
-
+            header
             Divider()
-
-            VStack(alignment: .leading, spacing: 8) {
-                Button("Open Organizer") {
-                    openMainWindow()
-                }
-
-                Button("Import Documents") {
-                    model.importDocumentsFromOpenPanel()
-                }
-
-                Button("Refresh") {
-                    model.refresh()
-                }
-            }
-
+            actions
             Divider()
-
-            VStack(alignment: .leading, spacing: 6) {
-                Text("Recent Documents")
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
-
-                if model.documents.isEmpty {
-                    Text("No documents imported yet")
-                        .font(.caption)
-                        .foregroundStyle(.secondary)
-                } else {
-                    ForEach(Array(model.documents.prefix(5))) { record in
-                        VStack(alignment: .leading, spacing: 2) {
-                            Text(record.fileName)
-                                .font(.subheadline)
-                                .lineLimit(1)
-                            HStack(spacing: 6) {
-                                Circle()
-                                    .fill(model.riskColor(for: record.effectiveCategory))
-                                    .frame(width: 8, height: 8)
-
-                                Text(record.effectiveCategory.rawValue.capitalized)
-                                    .font(.caption)
-                                    .foregroundStyle(model.riskColor(for: record.effectiveCategory))
-
-                                Text("• \(model.sensitivityLabel(for: record.effectiveCategory))")
-                                    .font(.caption2)
-                                    .foregroundStyle(.secondary)
-                            }
-                        }
-                    }
-                }
-            }
-
+            recentDocuments
             if !model.documents.isEmpty {
                 Divider()
-
-                VStack(alignment: .leading, spacing: 8) {
-                    Text("Quick Review")
-                        .font(.caption)
-                        .foregroundStyle(.secondary)
-
-                    Picker("Document", selection: Binding(
-                        get: { quickSelectedDocumentID ?? model.documents.first?.id },
-                        set: { newValue in
-                            quickSelectedDocumentID = newValue
-                            syncQuickCategoryWithSelection()
-                        }
-                    )) {
-                        ForEach(Array(model.documents.prefix(8))) { record in
-                            Text(record.fileName).tag(Optional(record.id))
-                        }
-                    }
-                    .pickerStyle(.menu)
-
-                    if let selected = selectedQuickDocument {
-                        HStack(spacing: 8) {
-                            Circle()
-                                .fill(model.riskColor(for: selected.effectiveCategory))
-                                .frame(width: 9, height: 9)
-
-                            Text("Sensitivity: \(model.sensitivityLabel(for: selected.effectiveCategory))")
-                                .font(.caption)
-                                .foregroundStyle(model.riskColor(for: selected.effectiveCategory))
-                        }
-
-                        Text(selected.contentPreview)
-                            .font(.caption)
-                            .foregroundStyle(.secondary)
-                            .lineLimit(4)
-
-                        Picker("Category", selection: $quickSelectedCategory) {
-                            ForEach(DocumentCategory.allCases, id: \.self) { category in
-                                Text(category.rawValue.capitalized).tag(category)
-                            }
-                        }
-                        .pickerStyle(.menu)
-
-                        Button("Apply Category") {
-                            model.recategorize(documentID: selected.id, to: quickSelectedCategory, reason: quickReason)
-                            syncQuickCategoryWithSelection()
-                        }
-                    }
-                }
+                quickReview
             }
-
             Divider()
-
-            VStack(alignment: .leading, spacing: 8) {
-                HStack {
-                    Text("Auto-Organization")
-                        .font(.caption)
-                        .foregroundStyle(.secondary)
-
-                    Spacer()
-
-                    Toggle("", isOn: Binding(
-                        get: { model.isFolderWatchingEnabled },
-                        set: { _ in model.toggleFolderWatching() }
-                    ))
-                    .scaleEffect(0.8, anchor: .trailing)
-                }
-
-                if model.isFolderWatchingEnabled {
-                    VStack(alignment: .leading, spacing: 4) {
-                        Text("Watching: Downloads, Desktop")
-                            .font(.caption2)
-                            .foregroundStyle(.secondary)
-
-                        if !model.folderStatistics.isEmpty {
-                            VStack(alignment: .leading, spacing: 3) {
-                                ForEach(model.folderStatistics, id: \.category) { stat in
-                                    HStack {
-                                        Text(stat.category.rawValue.capitalized)
-                                            .font(.caption2)
-                                        Spacer()
-                                        Text("\(stat.fileCount) file\(stat.fileCount == 1 ? "" : "s")")
-                                            .font(.caption2)
-                                            .foregroundStyle(.secondary)
-                                    }
-                                }
-                            }
-                        }
-
-                        Button("Reveal Organized Files") {
-                            model.revealOrganizationFolder()
-                        }
-                        .font(.caption)
-                        .controlSize(.small)
-                    }
-                }
-            }
-
+            autoOrganization
             Divider()
-
-            Divider()
-
-            Button("Settings…", systemImage: "gearshape") {
-                NSApp.sendAction(Selector(("showSettingsWindow:")), to: nil, from: nil)
-                NSApp.activate(ignoringOtherApps: true)
-            }
-
-            Button("Quit") {
-                NSApplication.shared.terminate(nil)
-            }
+            footer
         }
         .padding(14)
         .frame(width: 320)
-        .background(.regularMaterial)
+        .background(
+            LinearGradient(
+                colors: [AppTheme.vividBlue.opacity(0.16), AppTheme.vividPurple.opacity(0.16)],
+                startPoint: .topLeading,
+                endPoint: .bottomTrailing
+            )
+        )
         .onAppear {
             if quickSelectedDocumentID == nil {
                 quickSelectedDocumentID = model.documents.first?.id
-                syncQuickCategoryWithSelection()
+                syncQuickCategory()
             }
         }
+    }
+
+    // MARK: Sections
+
+    private var header: some View {
+        VStack(alignment: .leading, spacing: 4) {
+            Text("DocumentOrganizer")
+                .font(.headline.weight(.semibold))
+            Text("\(model.totalDocuments) documents \u{00b7} \(model.activeCategoryCount) categories")
+                .font(.caption)
+                .foregroundStyle(.secondary)
+        }
+    }
+
+    private var actions: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            Button("Open Organizer") { openMainWindow() }
+            Button("Import Documents") { model.importDocumentsFromOpenPanel() }
+            Button("Refresh") { model.refresh() }
+        }
+    }
+
+    private var recentDocuments: some View {
+        VStack(alignment: .leading, spacing: 6) {
+            Text("Recent Documents")
+                .font(.caption)
+                .foregroundStyle(.secondary)
+
+            if model.documents.isEmpty {
+                Text("No documents imported yet")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+            } else {
+                ForEach(Array(model.documents.prefix(5))) { record in
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text(record.fileName)
+                            .font(.subheadline)
+                            .lineLimit(1)
+                        HStack(spacing: 6) {
+                            Circle()
+                                .fill(model.riskColor(for: record.effectiveCategory))
+                                .frame(width: 8, height: 8)
+                            Text(record.effectiveCategory.rawValue.capitalized)
+                                .font(.caption)
+                                .foregroundStyle(model.riskColor(for: record.effectiveCategory))
+                            Text("\u{00b7} \(model.sensitivityLabel(for: record.effectiveCategory))")
+                                .font(.caption2)
+                                .foregroundStyle(.secondary)
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    private var quickReview: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            Text("Quick Review")
+                .font(.caption)
+                .foregroundStyle(.secondary)
+
+            Picker("Document", selection: Binding(
+                get: { quickSelectedDocumentID ?? model.documents.first?.id },
+                set: { quickSelectedDocumentID = $0; syncQuickCategory() }
+            )) {
+                ForEach(Array(model.documents.prefix(8))) { record in
+                    Text(record.fileName).tag(Optional(record.id))
+                }
+            }
+            .pickerStyle(.menu)
+
+            if let selected = selectedQuickDocument {
+                HStack(spacing: 8) {
+                    Circle()
+                        .fill(model.riskColor(for: selected.effectiveCategory))
+                        .frame(width: 9, height: 9)
+                    Text("Sensitivity: \(model.sensitivityLabel(for: selected.effectiveCategory))")
+                        .font(.caption)
+                        .foregroundStyle(model.riskColor(for: selected.effectiveCategory))
+                }
+                Text(selected.contentPreview)
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+                    .lineLimit(4)
+                Picker("Category", selection: $quickSelectedCategory) {
+                    ForEach(DocumentCategory.allCases, id: \.self) { c in
+                        Text(c.rawValue.capitalized).tag(c)
+                    }
+                }
+                .pickerStyle(.menu)
+                Button("Apply Category") {
+                    model.recategorize(documentID: selected.id, to: quickSelectedCategory, reason: quickReason)
+                    syncQuickCategory()
+                }
+            }
+        }
+    }
+
+    private var autoOrganization: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            HStack {
+                Text("Auto-Organization")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+                Spacer()
+                Toggle("", isOn: Binding(
+                    get: { model.isFolderWatchingEnabled },
+                    set: { _ in model.toggleFolderWatching() }
+                ))
+                .scaleEffect(0.8, anchor: .trailing)
+            }
+
+            if model.isFolderWatchingEnabled {
+                Text(model.watchedFoldersSummary)
+                    .font(.caption2)
+                    .foregroundStyle(.secondary)
+
+                if !model.folderStatistics.isEmpty {
+                    ForEach(model.folderStatistics, id: \.category) { stat in
+                        HStack {
+                            Text(stat.category.rawValue.capitalized).font(.caption2)
+                            Spacer()
+                            Text("\(stat.fileCount) file\(stat.fileCount == 1 ? "" : "s")")
+                                .font(.caption2)
+                                .foregroundStyle(.secondary)
+                        }
+                    }
+                }
+
+                Button("Reveal Organized Files") { model.revealOrganizationFolder() }
+                    .font(.caption)
+                    .controlSize(.small)
+            }
+        }
+    }
+
+    private var footer: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            Button("Settings\u{2026}", systemImage: "gearshape") {
+                NSApp.sendAction(Selector(("showSettingsWindow:")), to: nil, from: nil)
+                NSApp.activate(ignoringOtherApps: true)
+            }
+            Button("Quit") { NSApplication.shared.terminate(nil) }
+        }
+    }
+
+    // MARK: Helpers
+
+    private var selectedQuickDocument: DocumentRecord? {
+        guard let id = quickSelectedDocumentID else { return model.documents.first }
+        return model.documents.first { $0.id == id }
+    }
+
+    private func syncQuickCategory() {
+        quickSelectedCategory = selectedQuickDocument?.effectiveCategory ?? .general
     }
 
     private func openMainWindow() {
         openWindow(id: "main-window")
         NSApplication.shared.activate(ignoringOtherApps: true)
     }
-
-    private var selectedQuickDocument: DocumentRecord? {
-        guard let quickSelectedDocumentID else {
-            return model.documents.first
-        }
-        return model.documents.first { $0.id == quickSelectedDocumentID }
-    }
-
-    private func syncQuickCategoryWithSelection() {
-        if let selectedQuickDocument {
-            quickSelectedCategory = selectedQuickDocument.effectiveCategory
-        }
-    }
 }
+
+// MARK: - ViewModel
 
 @MainActor
 final class DocumentOrganizerViewModel: ObservableObject {
+
+    // MARK: Published State
+
     @Published var documents: [DocumentRecord] = []
     @Published var selectedDocumentID: UUID?
     @Published var selectedCategory: DocumentCategory = .general
@@ -606,132 +635,119 @@ final class DocumentOrganizerViewModel: ObservableObject {
     @Published var isFolderWatchingEnabled = false
     @Published var folderStatistics: [CategoryStatistic] = []
     @Published var organizationRoot: URL?
+    @Published var storageAvailable = "—"
+    @Published var storageTotal = "—"
+    @Published var isNetworkConnected = false
+
+    // MARK: Private State
 
     private var facade: DocumentOrganizerFacade?
     private var snapshot: DashboardSnapshot?
-    private var healthDescription = "Unavailable"
     private var fileSystemWatcher: FileSystemWatcher?
     private var fileOrganizer: FileOrganizer?
     private var securityScopedOrganizationRoot: URL?
 
-    private final class ThreadSafeURLCollector: @unchecked Sendable {
-        private let lock = NSLock()
-        private var storage: [URL] = []
-
-        func append(_ url: URL) {
-            lock.lock()
-            storage.append(url)
-            lock.unlock()
-        }
-
-        func values() -> [URL] {
-            lock.lock()
-            let copy = storage
-            lock.unlock()
-            return copy
-        }
-    }
+    // MARK: Init / Deinit
 
     init() {
         do {
             facade = try DocumentOrganizerFacade()
             refresh()
-            if AppSettings.shared.autoStartWatching {
-                startFolderWatching()
-            }
+            updateDeviceMetrics()
+            if AppSettings.shared.autoStartWatching { startFolderWatching() }
         } catch {
             errorMessage = error.localizedDescription
         }
     }
 
     deinit {
-        if let securityScopedOrganizationRoot {
-            securityScopedOrganizationRoot.stopAccessingSecurityScopedResource()
-        }
+        securityScopedOrganizationRoot?.stopAccessingSecurityScopedResource()
     }
 
-    var filteredDocuments: [DocumentRecord] {
-        let normalized = searchQuery.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
-        guard !normalized.isEmpty else {
-            return documents
-        }
+    // MARK: Computed Properties
 
-        return documents.filter { record in
-            record.fileName.lowercased().contains(normalized)
-                || record.contentPreview.lowercased().contains(normalized)
-                || record.effectiveCategory.rawValue.lowercased().contains(normalized)
+    var filteredDocuments: [DocumentRecord] {
+        let q = searchQuery.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
+        guard !q.isEmpty else { return documents }
+        return documents.filter {
+            $0.fileName.lowercased().contains(q)
+            || $0.contentPreview.lowercased().contains(q)
+            || $0.effectiveCategory.rawValue.lowercased().contains(q)
         }
     }
 
     var selectedDocument: DocumentRecord? {
-        guard let selectedDocumentID else {
-            return nil
-        }
-        return documents.first { $0.id == selectedDocumentID }
+        guard let id = selectedDocumentID else { return nil }
+        return documents.first { $0.id == id }
     }
 
-    var totalDocuments: Int {
-        snapshot?.totalDocuments ?? documents.count
+    var totalDocuments: Int { snapshot?.totalDocuments ?? documents.count }
+    var activeCategoryCount: Int { (snapshot?.categoryBreakdown ?? []).filter { $0.count > 0 }.count }
+    var isStateHealthy: Bool { facade?.stateHealthReport().healthy ?? false }
+    var stateLocationText: String { facade?.appStateURL().path ?? "Unavailable" }
+
+    var watchedFoldersSummary: String {
+        let names = AppSettings.shared.watchedDirectories.map(\.lastPathComponent)
+        return names.isEmpty ? "Watching: none" : "Watching: \(names.joined(separator: ", "))"
     }
 
-    var activeCategoryCount: Int {
-        (snapshot?.categoryBreakdown ?? []).filter { $0.count > 0 }.count
-    }
-
-    var isStateHealthy: Bool {
-        facade?.stateHealthReport().healthy ?? false
-    }
-
-    var stateLocationText: String {
-        facade?.appStateURL().path ?? healthDescription
-    }
+    // MARK: Document Actions
 
     func refresh() {
-        guard let facade else {
-            return
-        }
-
+        guard let facade else { return }
         documents = facade.listDocuments()
         snapshot = facade.dashboardSnapshot()
-        healthDescription = facade.appStateURL().path
-
-        if let selectedDocumentID,
-           !documents.contains(where: { $0.id == selectedDocumentID }) {
-            self.selectedDocumentID = nil
+        if let id = selectedDocumentID, !documents.contains(where: { $0.id == id }) {
+            selectedDocumentID = nil
         }
-
         syncSelectedCategory()
-    }
-
-    func importDocuments(from urls: [URL], summarySuffix: String? = nil) {
-        guard let facade else {
-            return
-        }
-
-        do {
-            let imported = try facade.importDocuments(paths: urls.map(\.path))
-            refresh()
-            if imported.isEmpty {
-                successMessage = "No documents were imported."
-            } else if let summarySuffix {
-                successMessage = "Imported \(imported.count) document(s). \(summarySuffix)"
-            } else {
-                successMessage = "Imported \(imported.count) document(s)."
-            }
-        } catch {
-            errorMessage = error.localizedDescription
-        }
     }
 
     func importDocumentsFromOpenPanel() {
         let panel = NSOpenPanel()
         panel.allowsMultipleSelection = true
-        panel.canChooseDirectories = false
         panel.canChooseFiles = true
+        panel.canChooseDirectories = false
         panel.allowedContentTypes = supportedImportTypes
+        if panel.runModal() == .OK { importDocuments(from: panel.urls) }
+    }
 
-        if panel.runModal() == .OK {
-            importDocuments(from: panel.urls)
+    func importFolderFromOpenPanel() {
+        let panel = NSOpenPanel()
+        panel.allowsMultipleSelection = true
+        panel.canChooseFiles = false
+        panel.canChooseDirectories = true
+        panel.canCreateDirectories = false
+        panel.prompt = "Import"
+        if panel.runModal() == .OK { importDocuments(fromFolders: panel.urls) }
+    }
+
+    func importDocuments(fromFolders folderURLs: [URL]) {
+        let filesToImport = folderURLs.flatMap { collectImportableFiles(in: $0) }
+        guard !filesToImport.isEmpty else {
+            errorMessage = "No supported files were found in the selected folder(s)."
+            return
+        }
+
+        importDocuments(
+            from: filesToImport,
+            summarySuffix: "from \(folderURLs.count) folder(s)"
+        )
+    }
+
+    func importDocuments(from urls: [URL], summarySuffix: String? = nil) {
+        guard let facade else { return }
+        do {
+            let imported = try facade.importDocuments(paths: urls.map(\.path))
+            refresh()
+            if imported.isEmpty {
+                successMessage = "No documents were imported."
+            } else {
+                let note = summarySuffix.map { " \($0)" } ?? ""
+                successMessage = "Imported \(imported.count) document(s).\(note)"
+            }
+        } catch {
+            errorMessage = error.localizedDescription
         }
     }
 
@@ -743,225 +759,153 @@ final class DocumentOrganizerViewModel: ObservableObject {
             group.enter()
             provider.loadItem(forTypeIdentifier: UTType.fileURL.identifier, options: nil) { item, _ in
                 defer { group.leave() }
-
-                if let data = item as? Data,
-                   let url = URL(dataRepresentation: data, relativeTo: nil) {
+                if let data = item as? Data, let url = URL(dataRepresentation: data, relativeTo: nil) {
                     collector.append(url)
-                    return
-                }
-
-                if let url = item as? URL {
+                } else if let url = item as? URL {
                     collector.append(url)
                 }
             }
         }
 
         group.notify(queue: .main) {
-            let droppedFileURLs = collector.values().filter { $0.isFileURL }
-            if droppedFileURLs.isEmpty {
+            let fileURLs = collector.values().filter { $0.isFileURL }
+            guard !fileURLs.isEmpty else {
                 self.errorMessage = "Dropped items did not contain importable file URLs."
                 return
             }
 
             var accepted: [URL] = []
-            var skippedDirectories = 0
+            var skippedDirs = 0
             var skippedUnsupported = 0
 
-            for fileURL in droppedFileURLs {
-                let isDirectory = (try? fileURL.resourceValues(forKeys: [.isDirectoryKey]).isDirectory) ?? false
-                if isDirectory {
-                    skippedDirectories += 1
-                    continue
-                }
-
-                let ext = fileURL.pathExtension.lowercased()
-                if self.supportedImportExtensions.contains(ext) {
-                    accepted.append(fileURL)
+            for url in fileURLs {
+                let isDir = (try? url.resourceValues(forKeys: [.isDirectoryKey]).isDirectory) ?? false
+                if isDir { skippedDirs += 1; continue }
+                if self.supportedImportExtensions.contains(url.pathExtension.lowercased()) {
+                    accepted.append(url)
                 } else {
                     skippedUnsupported += 1
                 }
             }
 
-            if accepted.isEmpty {
-                self.errorMessage = "No dropped files were importable. Skipped \(skippedDirectories) director\(skippedDirectories == 1 ? "y" : "ies") and \(skippedUnsupported) unsupported file(s)."
+            guard !accepted.isEmpty else {
+                self.errorMessage = "No dropped files were importable (skipped \(skippedDirs) dir(s), \(skippedUnsupported) unsupported)."
                 return
             }
 
             var notes: [String] = []
-            if skippedDirectories > 0 {
-                notes.append("skipped \(skippedDirectories) director\(skippedDirectories == 1 ? "y" : "ies")")
-            }
-            if skippedUnsupported > 0 {
-                notes.append("skipped \(skippedUnsupported) unsupported file(s)")
-            }
-
-            let suffix = notes.isEmpty ? nil : notes.joined(separator: "; ") + "."
-            self.importDocuments(from: accepted, summarySuffix: suffix)
+            if skippedDirs > 0 { notes.append("skipped \(skippedDirs) dir(s)") }
+            if skippedUnsupported > 0 { notes.append("skipped \(skippedUnsupported) unsupported") }
+            self.importDocuments(from: accepted, summarySuffix: notes.isEmpty ? nil : notes.joined(separator: "; "))
         }
 
         return true
     }
 
     func recategorizeSelectedDocument() {
-        guard let facade, let selectedDocument else {
-            return
-        }
-
+        guard let facade, let doc = selectedDocument else { return }
         do {
-            _ = try facade.recategorize(
-                documentID: selectedDocument.id,
-                to: selectedCategory,
-                reason: recategorizationReason
-            )
+            _ = try facade.recategorize(documentID: doc.id, to: selectedCategory, reason: recategorizationReason)
             refresh()
-            successMessage = "Updated category for \(selectedDocument.fileName)."
+            successMessage = "Updated category for \(doc.fileName)."
         } catch {
             errorMessage = error.localizedDescription
         }
     }
 
     func recategorize(documentID: UUID, to category: DocumentCategory, reason: String) {
-        guard let facade else {
-            return
-        }
-
+        guard let facade else { return }
         do {
             _ = try facade.recategorize(documentID: documentID, to: category, reason: reason)
             refresh()
-            if let updated = documents.first(where: { $0.id == documentID }) {
-                successMessage = "Updated category for \(updated.fileName)."
-            } else {
-                successMessage = "Updated document category."
-            }
+            successMessage = documents.first(where: { $0.id == documentID })
+                .map { "Updated category for \($0.fileName)." } ?? "Updated document category."
         } catch {
             errorMessage = error.localizedDescription
         }
     }
 
     func deleteSelectedDocument() {
-        guard let facade, let selectedDocument else {
-            return
-        }
-
+        guard let facade, let doc = selectedDocument else { return }
         do {
-            try facade.deleteDocument(documentID: selectedDocument.id)
+            try facade.deleteDocument(documentID: doc.id)
             refresh()
-            successMessage = "Deleted \(selectedDocument.fileName)."
+            successMessage = "Deleted \(doc.fileName)."
         } catch {
             errorMessage = error.localizedDescription
         }
     }
 
     func syncSelectedCategory() {
-        guard let selectedDocument else {
-            return
-        }
-        selectedCategory = selectedDocument.effectiveCategory
+        selectedCategory = selectedDocument?.effectiveCategory ?? .general
     }
 
-    private var supportedImportTypes: [UTType] {
-        var types: [UTType] = [.plainText, .text, .pdf, .rtf, .image, .json, .xml]
-        if let html = UTType(filenameExtension: "html") {
-            types.append(html)
-        }
-        if let docx = UTType(filenameExtension: "docx") {
-            types.append(docx)
-        }
-        if let csv = UTType(filenameExtension: "csv") {
-            types.append(csv)
-        }
-        if let markdown = UTType(filenameExtension: "md") {
-            types.append(markdown)
-        }
-        return types
-    }
-
-    private var supportedImportExtensions: Set<String> {
-        ["txt", "md", "csv", "rtf", "json", "xml", "html", "pdf", "docx", "png", "jpg", "jpeg", "tif", "tiff", "heic", "heif", "gif", "bmp"]
-    }
+    // MARK: Risk & Sensitivity
 
     func riskColor(for category: DocumentCategory) -> Color {
         switch category {
-        case .medical, .legal, .identification:
-            return .red
-        case .finance, .invoice, .contract:
-            return .orange
-        case .education, .resume:
-            return .yellow
-        case .correspondence, .general:
-            return .green
+        case .medical, .legal, .identification:  return AppTheme.riskHigh
+        case .finance, .invoice, .contract:      return AppTheme.riskMedium
+        case .education, .resume:                return AppTheme.riskLow
+        case .correspondence, .general:          return AppTheme.riskMinimal
         }
     }
 
     func sensitivityLabel(for category: DocumentCategory) -> String {
         switch category {
-        case .medical, .legal, .identification:
-            return "High"
-        case .finance, .invoice, .contract:
-            return "Medium"
-        case .education, .resume:
-            return "Low"
-        case .correspondence, .general:
-            return "Minimal"
+        case .medical, .legal, .identification:  return "High"
+        case .finance, .invoice, .contract:      return "Medium"
+        case .education, .resume:                return "Low"
+        case .correspondence, .general:          return "Minimal"
         }
     }
 
-    // MARK: - Folder Watching & Organization
+    // MARK: Folder Watching
 
     func toggleFolderWatching() {
-        if isFolderWatchingEnabled {
-            stopFolderWatching()
-        } else {
-            startFolderWatching()
-        }
+        isFolderWatchingEnabled ? stopFolderWatching() : startFolderWatching()
     }
 
     func startFolderWatching() {
-        let s = AppSettings.shared
-        let watchedDirs = s.watchedDirectories
+        let settings = AppSettings.shared
+        let watchedDirs = settings.watchedDirectories
 
         guard !watchedDirs.isEmpty else {
-            errorMessage = "No folders selected for watching. Go to Settings → Watching to enable at least one folder."
+            errorMessage = "No folders selected. Go to Settings \u{2192} Watching."
             return
         }
 
-        let resolvedOrganizationRoot = s.resolvedOrganizationRoot
-        var startedSecurityScope = false
-        if s.organizationRootBookmark != nil {
-            startedSecurityScope = resolvedOrganizationRoot.startAccessingSecurityScopedResource()
-            guard startedSecurityScope else {
-                errorMessage = "Unable to access the selected organization folder. Re-select it in Settings > Storage."
+        let orgRoot = settings.resolvedOrganizationRoot
+        var startedScope = false
+        if settings.organizationRootBookmark != nil {
+            startedScope = orgRoot.startAccessingSecurityScopedResource()
+            guard startedScope else {
+                errorMessage = "Unable to access the organization folder. Re-select it in Settings > Storage."
                 return
             }
-            securityScopedOrganizationRoot = resolvedOrganizationRoot
+            securityScopedOrganizationRoot = orgRoot
         }
 
         do {
-            fileSystemWatcher = FileSystemWatcher()
-            fileOrganizer = FileOrganizer(organizationRoot: resolvedOrganizationRoot)
-
-            organizationRoot = resolvedOrganizationRoot
-
-            for dir in watchedDirs {
-                try fileSystemWatcher?.startWatching(directory: dir)
+            let watcher = FileSystemWatcher()
+            watcher.setOnFilesAdded { [weak self] urls in
+                DispatchQueue.main.async { self?.processNewFiles(urls) }
             }
+            let organizer = FileOrganizer(organizationRoot: orgRoot)
+            for dir in watchedDirs { try watcher.startWatching(directory: dir) }
 
-            fileSystemWatcher?.setOnFilesAdded { [weak self] urls in
-                DispatchQueue.main.async {
-                    self?.processNewFiles(urls)
-                }
-            }
-
+            fileSystemWatcher = watcher
+            fileOrganizer = organizer
+            organizationRoot = orgRoot
             isFolderWatchingEnabled = true
-            let folderNames = watchedDirs.map(\.lastPathComponent).joined(separator: ", ")
-            successMessage = "Watching: \(folderNames)."
+            successMessage = "Watching: \(watchedDirs.map(\.lastPathComponent).joined(separator: ", "))."
             updateFolderStatistics()
         } catch {
-            if startedSecurityScope {
-                resolvedOrganizationRoot.stopAccessingSecurityScopedResource()
+            if startedScope {
+                orgRoot.stopAccessingSecurityScopedResource()
                 securityScopedOrganizationRoot = nil
             }
-            errorMessage = "Failed to start folder watching: \(error.localizedDescription)"
+            errorMessage = "Failed to start watching: \(error.localizedDescription)"
             isFolderWatchingEnabled = false
         }
     }
@@ -969,55 +913,14 @@ final class DocumentOrganizerViewModel: ObservableObject {
     func stopFolderWatching() {
         fileSystemWatcher?.stopAll()
         fileSystemWatcher = nil
-        if let securityScopedOrganizationRoot {
-            securityScopedOrganizationRoot.stopAccessingSecurityScopedResource()
-            self.securityScopedOrganizationRoot = nil
-        }
+        securityScopedOrganizationRoot?.stopAccessingSecurityScopedResource()
+        securityScopedOrganizationRoot = nil
         isFolderWatchingEnabled = false
         successMessage = "Stopped watching folders."
     }
 
-    private func processNewFiles(_ urls: [URL]) {
-        guard let facade, let organizer = fileOrganizer else {
-            return
-        }
-
-        do {
-            let imported = try facade.importDocuments(paths: urls.map(\.path))
-
-            for document in imported {
-                do {
-                    let sourceURL = URL(fileURLWithPath: document.filePath)
-                    guard FileManager.default.fileExists(atPath: sourceURL.path) else {
-                        continue
-                    }
-
-                    let organizedURL = try organizer.organize(file: sourceURL, document: document)
-                    _ = try facade.updateDocumentFilePath(
-                        documentID: document.id,
-                        to: organizedURL.path,
-                        actor: "system"
-                    )
-                } catch {
-                    print("Failed to organize file: \(error)")
-                }
-            }
-
-            refresh()
-            updateFolderStatistics()
-            if !imported.isEmpty {
-                successMessage = "Auto-organized \(imported.count) new document(s)."
-            }
-        } catch {
-            errorMessage = "Failed to organize new files: \(error.localizedDescription)"
-        }
-    }
-
     func updateFolderStatistics() {
-        guard let organizer = fileOrganizer else {
-            return
-        }
-
+        guard let organizer = fileOrganizer else { return }
         do {
             folderStatistics = try organizer.folderStatistics()
         } catch {
@@ -1026,12 +929,124 @@ final class DocumentOrganizerViewModel: ObservableObject {
     }
 
     func revealOrganizationFolder() {
-        guard let organizationRoot else {
-            errorMessage = "Organization folder path not available."
-            return
-        }
-
+        guard let organizationRoot else { errorMessage = "Organization folder not available."; return }
         NSWorkspace.shared.open(organizationRoot)
         successMessage = "Opened organization folder."
+    }
+
+    private func processNewFiles(_ urls: [URL]) {
+        guard let facade, let organizer = fileOrganizer else { return }
+
+        var organized = 0, duplicates = 0, failures = 0
+
+        for sourceURL in urls {
+            guard FileManager.default.fileExists(atPath: sourceURL.path) else { continue }
+            do {
+                guard let record = try facade.importDocuments(paths: [sourceURL.path]).first else { continue }
+                let isDuplicate = URL(fileURLWithPath: record.filePath).standardizedFileURL != sourceURL.standardizedFileURL
+                if isDuplicate { duplicates += 1; continue }
+                let dest = try organizer.organize(file: sourceURL, document: record)
+                _ = try facade.updateDocumentFilePath(documentID: record.id, to: dest.path, actor: "system")
+                organized += 1
+            } catch {
+                failures += 1
+                print("Failed to organize \(sourceURL.lastPathComponent): \(error)")
+            }
+        }
+
+        refresh()
+        updateFolderStatistics()
+
+        if organized > 0 || duplicates > 0 {
+            var parts = ["Auto-organized \(organized) document(s)"]
+            if duplicates > 0 { parts.append("skipped \(duplicates) duplicate(s)") }
+            if failures > 0   { parts.append("\(failures) failed") }
+            successMessage = parts.joined(separator: "; ") + "."
+        } else if failures > 0 {
+            errorMessage = "Failed to organize \(failures) file(s)."
+        }
+    }
+
+    // MARK: Supported Types
+
+    private var supportedImportTypes: [UTType] {
+        var types: [UTType] = [.plainText, .text, .pdf, .rtf, .image, .json, .xml]
+        for ext in ["html", "docx", "csv", "md"] {
+            if let t = UTType(filenameExtension: ext) { types.append(t) }
+        }
+        return types
+    }
+
+    private var supportedImportExtensions: Set<String> {
+        ["txt", "md", "csv", "rtf", "json", "xml", "html", "pdf", "docx",
+         "png", "jpg", "jpeg", "tif", "tiff", "heic", "heif", "gif", "bmp"]
+    }
+
+    private func collectImportableFiles(in folderURL: URL) -> [URL] {
+        let keys: [URLResourceKey] = [.isRegularFileKey]
+        guard let enumerator = FileManager.default.enumerator(
+            at: folderURL,
+            includingPropertiesForKeys: keys,
+            options: [.skipsHiddenFiles, .skipsPackageDescendants]
+        ) else {
+            return []
+        }
+
+        var files: [URL] = []
+        for case let url as URL in enumerator {
+            guard let values = try? url.resourceValues(forKeys: Set(keys)), values.isRegularFile == true else {
+                continue
+            }
+            if supportedImportExtensions.contains(url.pathExtension.lowercased()) {
+                files.append(url)
+            }
+        }
+        return files
+    }
+
+    // MARK: Thread-Safe URL Collector
+
+    private final class ThreadSafeURLCollector: @unchecked Sendable {
+        private let lock = NSLock()
+        private var storage: [URL] = []
+        func append(_ url: URL) { lock.lock(); storage.append(url); lock.unlock() }
+        func values() -> [URL] { lock.lock(); defer { lock.unlock() }; return storage }
+    }
+
+    // MARK: Device Metrics
+
+    private func updateDeviceMetrics() {
+        let fileManager = FileManager.default
+        
+        // Storage info
+        if let attributes = try? fileManager.attributesOfFileSystem(forPath: NSHomeDirectory()) {
+            let totalSpace = (attributes[.systemSize] as? NSNumber)?.int64Value ?? 0
+            let freeSpace = (attributes[.systemFreeSize] as? NSNumber)?.int64Value ?? 0
+            storageTotal = formatBytes(totalSpace)
+            storageAvailable = formatBytes(freeSpace)
+        }
+        
+        // Network connectivity check
+        isNetworkConnected = checkNetworkConnectivity()
+    }
+
+    private func formatBytes(_ bytes: Int64) -> String {
+        let units = ["B", "KB", "MB", "GB", "TB"]
+        var size = Double(bytes)
+        var unitIndex = 0
+        
+        while size >= 1024 && unitIndex < units.count - 1 {
+            size /= 1024
+            unitIndex += 1
+        }
+        
+        return String(format: "%.1f %@", size, units[unitIndex])
+    }
+
+    private func checkNetworkConnectivity() -> Bool {
+        var flags: SCNetworkReachabilityFlags = []
+        guard let reachability = SCNetworkReachabilityCreateWithName(nil, "apple.com") else { return false }
+        guard SCNetworkReachabilityGetFlags(reachability, &flags) else { return false }
+        return flags.contains(.reachable) && !flags.contains(.connectionRequired)
     }
 }

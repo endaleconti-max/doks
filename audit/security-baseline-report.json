@@ -1,10 +1,10 @@
 {
-  "generatedAt": "2026-03-26T21:50:30.458569+00:00",
+  "generatedAt": "2026-03-28T09:47:10.576406+00:00",
   "packagePath": "/Users/endaleconti/git folder/Documents App",
   "checks": {
     "seed_import_succeeds": true,
     "state_file_exists": true,
-    "key_file_exists": true,
+    "key_material_available": true,
     "state_encrypted_at_rest": true,
     "key_length_32_bytes": true,
     "key_permissions_restrictive": true,
@@ -15,7 +15,7 @@
   "details": {
     "seed_import": "ok",
     "state_encryption": "ok",
-    "key_permissions": "mode=0o600",
+    "key_permissions": "keychain-managed",
     "plugin_permission_gate": "ok",
     "state_load_safety_gate": "ok"
   },

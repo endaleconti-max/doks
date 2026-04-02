@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-03-26T21:50:30.357079+00:00",
+  "generatedAt": "2026-03-28T09:47:10.461493+00:00",
   "packagePath": "/Users/endaleconti/git folder/Documents App",
   "checks": {
     "import_succeeds": true,
@@ -17,7 +17,7 @@
   "details": {
     "import": "ok",
     "categorization": "ok",
-    "performance": "import=0.01s list=0.01s search=0.01s state-health=0.01s",
+    "performance": "import=0.03s list=0.02s search=0.01s state-health=0.02s",
     "reliability": "list_successes=5/5 state_health_ok=True",
     "rights_workflow": "ok",
     "retention_workflow": "ok"

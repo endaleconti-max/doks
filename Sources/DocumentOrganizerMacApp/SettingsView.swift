@@ -7,7 +7,7 @@ struct SettingsView: View {
     var body: some View {
         ZStack {
             LinearGradient(
-                colors: [Color(nsColor: .windowBackgroundColor), Color(nsColor: .underPageBackgroundColor)],
+                colors: AppTheme.canvasGradient,
                 startPoint: .topLeading,
                 endPoint: .bottomTrailing
             )
@@ -38,6 +38,7 @@ struct SettingsView: View {
                     }
                     .tag(3)
             }
+            .tint(AppTheme.actionAccent)
         }
         .frame(width: 500, height: 380)
     }
@@ -93,7 +94,11 @@ private struct WatchingTab: View {
         }
         .formStyle(.grouped)
         .padding()
-        .background(.regularMaterial, in: RoundedRectangle(cornerRadius: 14, style: .continuous))
+        .background(AppTheme.panelFill, in: RoundedRectangle(cornerRadius: 14, style: .continuous))
+        .overlay(
+            RoundedRectangle(cornerRadius: 14, style: .continuous)
+                .stroke(AppTheme.panelStroke)
+        )
     }
 
     private func folderRow(label: String, systemImage: String, path: String, isOn: Binding<Bool>) -> some View {
@@ -152,7 +157,11 @@ private struct PrivacyTab: View {
         }
         .formStyle(.grouped)
         .padding()
-        .background(.regularMaterial, in: RoundedRectangle(cornerRadius: 14, style: .continuous))
+        .background(AppTheme.panelFill, in: RoundedRectangle(cornerRadius: 14, style: .continuous))
+        .overlay(
+            RoundedRectangle(cornerRadius: 14, style: .continuous)
+                .stroke(AppTheme.panelStroke)
+        )
     }
 
     private func presetRow(preset: PrivacyPreset) -> some View {
@@ -209,7 +218,11 @@ private struct NamingTab: View {
         }
         .formStyle(.grouped)
         .padding()
-        .background(.regularMaterial, in: RoundedRectangle(cornerRadius: 14, style: .continuous))
+        .background(AppTheme.panelFill, in: RoundedRectangle(cornerRadius: 14, style: .continuous))
+        .overlay(
+            RoundedRectangle(cornerRadius: 14, style: .continuous)
+                .stroke(AppTheme.panelStroke)
+        )
     }
 
     private func patternRow(pattern: NamingPattern) -> some View {
@@ -290,7 +303,11 @@ private struct StorageTab: View {
         }
         .formStyle(.grouped)
         .padding()
-        .background(.regularMaterial, in: RoundedRectangle(cornerRadius: 14, style: .continuous))
+        .background(AppTheme.panelFill, in: RoundedRectangle(cornerRadius: 14, style: .continuous))
+        .overlay(
+            RoundedRectangle(cornerRadius: 14, style: .continuous)
+                .stroke(AppTheme.panelStroke)
+        )
     }
 
     private func pickFolder() {

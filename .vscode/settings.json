@@ -1,5 +1,6 @@
 {
     "git.ignoreLimitWarning": true,
+    "github.copilot.chat.searchSubagent.enabled": false,
     "task.allowAutomaticTasks": "on",
     "files.watcherExclude": {
         "**/.build/**": true,

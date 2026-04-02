@@ -1,16 +1,18 @@
+<div align="right">
+
+**Repository:** [fill]  
+**Environment:** Production / Staging / Other: [fill]  
+**Date:** [YYYY-MM-DD]  
+**Completed by:** [name]  
+**Reviewed by:** [name]
+
+</div>
+
 # GitHub Setup Signoff
 
 This document records completion evidence for manual repository governance setup.
 
 Use this together with [github-setup-checklist.md](github-setup-checklist.md).
-
-## Metadata
-
-- Repository: [fill]
-- Environment: Production / Staging / Other: [fill]
-- Date: [YYYY-MM-DD]
-- Completed by: [name]
-- Reviewed by: [name]
 
 ## Evidence Links
 

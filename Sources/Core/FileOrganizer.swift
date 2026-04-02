@@ -17,20 +17,17 @@ public struct FileOrganizer {
         try FileManager.default.createDirectory(at: categoryFolder, withIntermediateDirectories: true)
 
         let newFileName = generateFileName(for: document, originalFile: file)
-        let newFilePath = categoryFolder.appendingPathComponent(newFileName)
+        let requestedPath = categoryFolder.appendingPathComponent(newFileName)
 
         // If file is being moved to same location, skip
-        if file.standardizedFileURL == newFilePath.standardizedFileURL {
-            return newFilePath
+        if file.standardizedFileURL == requestedPath.standardizedFileURL {
+            return requestedPath
         }
 
-        // Handle existing file
-        if FileManager.default.fileExists(atPath: newFilePath.path) {
-            try FileManager.default.removeItem(at: newFilePath)
-        }
+        let destinationPath = uniqueDestinationURL(for: requestedPath, source: file)
 
-        try FileManager.default.moveItem(at: file, to: newFilePath)
-        return newFilePath
+        try FileManager.default.moveItem(at: file, to: destinationPath)
+        return destinationPath
     }
 
     /// Generate an organized filename following: [Category]-[Date]-[OriginalName]
@@ -47,6 +44,36 @@ public struct FileOrganizer {
         let organisedName = "\(document.effectiveCategory.rawValue)-\(dateString)-\(sanitizedBase)"
 
         return fileExtension.isEmpty ? String(organisedName) : "\(organisedName).\(fileExtension)"
+    }
+
+    private func uniqueDestinationURL(for requestedURL: URL, source: URL) -> URL {
+        if !FileManager.default.fileExists(atPath: requestedURL.path) {
+            return requestedURL
+        }
+
+        if source.standardizedFileURL == requestedURL.standardizedFileURL {
+            return requestedURL
+        }
+
+        let directory = requestedURL.deletingLastPathComponent()
+        let baseName = requestedURL.deletingPathExtension().lastPathComponent
+        let ext = requestedURL.pathExtension
+
+        var counter = 2
+        while true {
+            let candidateName: String
+            if ext.isEmpty {
+                candidateName = "\(baseName)-\(counter)"
+            } else {
+                candidateName = "\(baseName)-\(counter).\(ext)"
+            }
+
+            let candidate = directory.appendingPathComponent(candidateName)
+            if !FileManager.default.fileExists(atPath: candidate.path) {
+                return candidate
+            }
+            counter += 1
+        }
     }
 
     /// Get the assigned folder path for a category.
