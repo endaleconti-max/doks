@@ -30,6 +30,6 @@ enum AppTheme {
     static let panelStroke = vividBlue.opacity(0.28)
 
     static var canvasGradient: [Color] {
-        [canvasTop, vividRed, canvasBottom]
+        [canvasTop, canvasBottom]
     }
 }
