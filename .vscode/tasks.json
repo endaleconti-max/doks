@@ -6,7 +6,10 @@
 			"type": "shell",
 			"command": "./scripts/auto_commit_push.sh",
 			"options": {
-				"cwd": "${workspaceFolder}"
+				"cwd": "${workspaceFolder}",
+				"env": {
+					"AUTO_COMMIT_INTERVAL_SECONDS": "60"
+				}
 			},
 			"isBackground": true,
 			"problemMatcher": [],
