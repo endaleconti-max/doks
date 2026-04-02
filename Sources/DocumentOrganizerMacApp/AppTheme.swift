@@ -2,12 +2,16 @@ import AppKit
 import SwiftUI
 
 enum AppTheme {
+    // Background palette.
+    static let vividRed = Color(nsColor: NSColor(calibratedRed: 0.95, green: 0.08, blue: 0.18, alpha: 1.0))
+    static let metallicBlack = Color(nsColor: NSColor(calibratedRed: 0.06, green: 0.06, blue: 0.07, alpha: 1.0))
+
     // Two-color visual system.
     static let vividBlue = Color(nsColor: NSColor(calibratedRed: 0.16, green: 0.37, blue: 1.00, alpha: 1.0))
     static let vividPurple = Color(nsColor: NSColor(calibratedRed: 0.62, green: 0.25, blue: 0.97, alpha: 1.0))
 
-    static let canvasTop = vividBlue
-    static let canvasBottom = vividPurple
+    static let canvasTop = vividRed
+    static let canvasBottom = metallicBlack
 
     // All UI semantics reuse only vivid blue and vivid purple.
     static let actionAccent = vividBlue

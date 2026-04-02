@@ -67,6 +67,30 @@ private struct MainWindowContentView: View {
                     endPoint: .bottomTrailing
                 )
                 .ignoresSafeArea()
+
+                // Metallic surface sheen matching the glass-metal cards.
+                LinearGradient(
+                    colors: [
+                        Color.white.opacity(0.20),
+                        Color.white.opacity(0.03),
+                        Color.black.opacity(0.16)
+                    ],
+                    startPoint: .topLeading,
+                    endPoint: .bottomTrailing
+                )
+                .blendMode(.screen)
+                .ignoresSafeArea()
+
+                RadialGradient(
+                    colors: [
+                        Color.white.opacity(0.16),
+                        Color.clear
+                    ],
+                    center: .topLeading,
+                    startRadius: 80,
+                    endRadius: 700
+                )
+                .ignoresSafeArea()
             }
             // Top-right: standalone search bar aligned to pill grid bounds
             .overlay(alignment: .topTrailing) {
