@@ -70,13 +70,14 @@ private struct MainWindowContentView: View {
 
                 Rectangle()
                     .fill(.ultraThinMaterial)
-                    .opacity(0.42)
+                    .opacity(0.50)
                     .ignoresSafeArea()
 
                 LinearGradient(
                     colors: [
-                        Color.white.opacity(0.26),
-                        Color.white.opacity(0.06),
+                        Color.white.opacity(0.34),
+                        Color.white.opacity(0.09),
+                        Color(nsColor: NSColor(calibratedWhite: 0.82, alpha: 0.12)),
                         Color.clear
                     ],
                     startPoint: .topLeading,
@@ -84,14 +85,36 @@ private struct MainWindowContentView: View {
                 )
                 .ignoresSafeArea()
 
+                LinearGradient(
+                    stops: [
+                        .init(color: Color.white.opacity(0.10), location: 0.00),
+                        .init(color: Color.clear, location: 0.06),
+                        .init(color: Color.white.opacity(0.06), location: 0.12),
+                        .init(color: Color.clear, location: 0.18),
+                        .init(color: Color.white.opacity(0.05), location: 0.24),
+                        .init(color: Color.clear, location: 0.30),
+                        .init(color: Color.white.opacity(0.04), location: 0.36),
+                        .init(color: Color.clear, location: 0.42),
+                        .init(color: Color.white.opacity(0.03), location: 0.48),
+                        .init(color: Color.clear, location: 0.54),
+                        .init(color: Color.white.opacity(0.02), location: 0.60),
+                        .init(color: Color.clear, location: 1.00),
+                    ],
+                    startPoint: .leading,
+                    endPoint: .trailing
+                )
+                .opacity(0.40)
+                .blendMode(.screen)
+                .ignoresSafeArea()
+
                 RadialGradient(
                     colors: [
-                        Color.white.opacity(0.22),
+                        Color.white.opacity(0.30),
                         Color.clear
                     ],
                     center: .topLeading,
                     startRadius: 30,
-                    endRadius: 620
+                    endRadius: 700
                 )
                 .ignoresSafeArea()
             }
