@@ -282,6 +282,18 @@ private struct MainWindowContentView: View {
                 .font(.caption)
                 .foregroundStyle(statusFeedbackColor)
                 .lineLimit(2)
+            Text("Health: \(healthWarningCount) warning(s) · \(healthErrorCount) error(s)")
+                .font(.caption2)
+                .foregroundStyle(.secondary)
+                .lineLimit(1)
+            Text("Click to refresh")
+                .font(.caption2)
+                .foregroundStyle(.secondary)
+        }
+        .contentShape(Rectangle())
+        .onTapGesture {
+            model.refresh()
+            model.updateFolderStatistics()
         }
 
         pillContainer(alignment: .leading, spacing: 8) {
@@ -315,26 +327,47 @@ private struct MainWindowContentView: View {
                     .font(.caption)
                     .foregroundStyle(.white)
             }
+            Text(model.isFolderWatchingEnabled ? "Click to stop watching" : "Click to start watching")
+                .font(.caption2)
+                .foregroundStyle(.secondary)
+        }
+        .contentShape(Rectangle())
+        .onTapGesture {
+            model.toggleFolderWatching()
         }
 
         pillContainer(alignment: .leading, spacing: 8) {
-            Text("Quick Action 1")
+            Text("Quick Action")
                 .font(.caption2)
                 .foregroundStyle(.secondary)
-            Text("Action placeholder")
-                .font(.caption)
-                .foregroundStyle(.white)
-                .lineLimit(1)
+            Button {
+                model.importDocumentsFromOpenPanel()
+            } label: {
+                Label("Import Documents", systemImage: "square.and.arrow.down")
+                    .font(.caption.weight(.semibold))
+                    .foregroundStyle(.white)
+            }
+            .buttonStyle(.plain)
+            Text("Pick files and add them now")
+                .font(.caption2)
+                .foregroundStyle(.secondary)
         }
 
         pillContainer(alignment: .leading, spacing: 8) {
-            Text("Quick Action 2")
+            Text("Quick Action")
                 .font(.caption2)
                 .foregroundStyle(.secondary)
-            Text("Action placeholder")
-                .font(.caption)
-                .foregroundStyle(.white)
-                .lineLimit(1)
+            Button {
+                model.revealOrganizationFolder()
+            } label: {
+                Label("Open Organized Folder", systemImage: "folder")
+                    .font(.caption.weight(.semibold))
+                    .foregroundStyle(.white)
+            }
+            .buttonStyle(.plain)
+            Text("Jump to destination folder")
+                .font(.caption2)
+                .foregroundStyle(.secondary)
         }
     }
 
@@ -474,6 +507,18 @@ private struct MainWindowContentView: View {
         if model.errorMessage != nil { return .red }
         if model.successMessage != nil { return .green }
         return model.isStateHealthy ? .green : .orange
+    }
+
+    private var healthErrorCount: Int {
+        model.errorMessage == nil ? 0 : 1
+    }
+
+    private var healthWarningCount: Int {
+        var warnings = 0
+        if !model.isNetworkConnected { warnings += 1 }
+        if !model.isFolderWatchingEnabled { warnings += 1 }
+        if !model.isStateHealthy { warnings += 1 }
+        return warnings
     }
 
 }
