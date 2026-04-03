@@ -284,7 +284,7 @@ private struct MainWindowContentView: View {
                 .lineLimit(2)
             Text("Health: \(healthWarningCount) warning(s) · \(healthErrorCount) error(s)")
                 .font(.caption2)
-                .foregroundStyle(.secondary)
+                .foregroundStyle(healthSummaryColor)
                 .lineLimit(1)
             Text("Click to refresh")
                 .font(.caption2)
@@ -519,6 +519,12 @@ private struct MainWindowContentView: View {
         if !model.isFolderWatchingEnabled { warnings += 1 }
         if !model.isStateHealthy { warnings += 1 }
         return warnings
+    }
+
+    private var healthSummaryColor: Color {
+        if healthErrorCount > 0 { return .red }
+        if healthWarningCount > 0 { return .orange }
+        return .green
     }
 
 }
