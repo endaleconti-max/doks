@@ -40,6 +40,11 @@ private struct MainWindowContentView: View {
     @ObservedObject var model: DocumentOrganizerViewModel
     @State private var supportMessageDraft = ""
     @State private var supportReply = "Ask us anything."
+    @State private var isStatusPillHovered = false
+    @State private var isStatusPillPressed = false
+    @State private var isProcessingPillHovered = false
+    @State private var isProcessingPillPressed = false
+    @State private var showHealthDetails = false
 
     private let outerInset: CGFloat = 24
     private let rightInset: CGFloat = 48
@@ -286,14 +291,30 @@ private struct MainWindowContentView: View {
                 .font(.caption2)
                 .foregroundStyle(healthSummaryColor)
                 .lineLimit(1)
-            Text("Click to refresh")
+            Text("Click for details")
                 .font(.caption2)
                 .foregroundStyle(.secondary)
         }
         .contentShape(Rectangle())
+        .scaleEffect(isStatusPillPressed ? 0.988 : 1.0)
+        .overlay {
+            RoundedRectangle(cornerRadius: 10)
+                .strokeBorder(
+                    isStatusPillHovered ? Color.white.opacity(0.36) : Color.white.opacity(0.14),
+                    lineWidth: isStatusPillHovered ? 1.1 : 0.75
+                )
+        }
+        .animation(.easeOut(duration: 0.14), value: isStatusPillHovered)
+        .animation(.easeOut(duration: 0.08), value: isStatusPillPressed)
+        .onHover { isStatusPillHovered = $0 }
+        .onLongPressGesture(minimumDuration: 0, pressing: { isStatusPillPressed = $0 }, perform: {})
         .onTapGesture {
             model.refresh()
             model.updateFolderStatistics()
+            showHealthDetails = true
+        }
+        .popover(isPresented: $showHealthDetails, arrowEdge: .bottom) {
+            healthDetailsPopover
         }
 
         pillContainer(alignment: .leading, spacing: 8) {
@@ -332,6 +353,18 @@ private struct MainWindowContentView: View {
                 .foregroundStyle(.secondary)
         }
         .contentShape(Rectangle())
+        .scaleEffect(isProcessingPillPressed ? 0.988 : 1.0)
+        .overlay {
+            RoundedRectangle(cornerRadius: 10)
+                .strokeBorder(
+                    isProcessingPillHovered ? Color.white.opacity(0.36) : Color.white.opacity(0.14),
+                    lineWidth: isProcessingPillHovered ? 1.1 : 0.75
+                )
+        }
+        .animation(.easeOut(duration: 0.14), value: isProcessingPillHovered)
+        .animation(.easeOut(duration: 0.08), value: isProcessingPillPressed)
+        .onHover { isProcessingPillHovered = $0 }
+        .onLongPressGesture(minimumDuration: 0, pressing: { isProcessingPillPressed = $0 }, perform: {})
         .onTapGesture {
             model.toggleFolderWatching()
         }
@@ -525,6 +558,51 @@ private struct MainWindowContentView: View {
         if healthErrorCount > 0 { return .red }
         if healthWarningCount > 0 { return .orange }
         return .green
+    }
+
+    private var healthDetailsPopover: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            Text("System Health")
+                .font(.headline)
+                .foregroundStyle(.white)
+
+            Text("\(healthWarningCount) warning(s) · \(healthErrorCount) error(s)")
+                .font(.caption)
+                .foregroundStyle(healthSummaryColor)
+
+            Divider().overlay(Color.white.opacity(0.2))
+
+            if healthDetailItems.isEmpty {
+                Text("All checks look healthy.")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+            } else {
+                ForEach(healthDetailItems, id: \.self) { item in
+                    HStack(alignment: .top, spacing: 6) {
+                        Image(systemName: "exclamationmark.triangle.fill")
+                            .font(.caption2)
+                            .foregroundStyle(.orange)
+                        Text(item)
+                            .font(.caption)
+                            .foregroundStyle(.white)
+                    }
+                }
+            }
+        }
+        .padding(12)
+        .frame(width: 300, alignment: .leading)
+        .background {
+            metallicCardBackground(cornerRadius: 10)
+        }
+    }
+
+    private var healthDetailItems: [String] {
+        var items: [String] = []
+        if !model.isNetworkConnected { items.append("Network is offline.") }
+        if !model.isFolderWatchingEnabled { items.append("Folder watching is currently off.") }
+        if !model.isStateHealthy { items.append("State requires attention.") }
+        if let error = model.errorMessage, !error.isEmpty { items.append("Latest error: \(error)") }
+        return items
     }
 
 }
