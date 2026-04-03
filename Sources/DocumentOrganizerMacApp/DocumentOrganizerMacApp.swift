@@ -287,10 +287,14 @@ private struct MainWindowContentView: View {
                 .font(.caption)
                 .foregroundStyle(statusFeedbackColor)
                 .lineLimit(2)
-            Text("Health: \(healthWarningCount) warning(s) · \(healthErrorCount) error(s)")
-                .font(.caption2)
-                .foregroundStyle(healthSummaryColor)
-                .lineLimit(1)
+            HStack(spacing: 6) {
+                Image(systemName: healthSummarySymbol)
+                    .font(.caption2)
+                Text("Health: \(healthWarningCount) warning(s) · \(healthErrorCount) error(s)")
+                    .lineLimit(1)
+            }
+            .font(.caption2)
+            .foregroundStyle(healthSummaryColor)
             Text("Click for details")
                 .font(.caption2)
                 .foregroundStyle(.secondary)
@@ -558,6 +562,12 @@ private struct MainWindowContentView: View {
         if healthErrorCount > 0 { return .red }
         if healthWarningCount > 0 { return .orange }
         return .green
+    }
+
+    private var healthSummarySymbol: String {
+        if healthErrorCount > 0 { return "xmark.octagon.fill" }
+        if healthWarningCount > 0 { return "exclamationmark.triangle.fill" }
+        return "checkmark.circle.fill"
     }
 
     private var healthDetailsPopover: some View {
