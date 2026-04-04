@@ -373,38 +373,68 @@ private struct MainWindowContentView: View {
             model.toggleFolderWatching()
         }
 
-        pillContainer(alignment: .leading, spacing: 8) {
-            Text("Quick Action")
-                .font(.caption2)
-                .foregroundStyle(.secondary)
+        pillContainer(alignment: .leading, spacing: 7) {
+            HStack(spacing: 9) {
+                ZStack {
+                    Circle()
+                        .fill(AppTheme.vividBlue.opacity(0.22))
+                        .frame(width: 30, height: 30)
+                    Image(systemName: "square.and.arrow.down")
+                        .font(.system(size: 13, weight: .semibold))
+                        .foregroundStyle(AppTheme.vividBlue)
+                }
+                VStack(alignment: .leading, spacing: 2) {
+                    Text("Import")
+                        .font(.caption2.weight(.bold))
+                        .foregroundStyle(AppTheme.vividBlue)
+                    Text(model.documents.isEmpty
+                         ? "No docs on file yet"
+                         : "\(model.documents.count) doc\(model.documents.count == 1 ? "" : "s") on file")
+                        .font(.caption2)
+                        .foregroundStyle(.secondary)
+                }
+            }
             Button {
                 model.importDocumentsFromOpenPanel()
             } label: {
-                Label("Import Documents", systemImage: "square.and.arrow.down")
+                Text("Import Documents")
                     .font(.caption.weight(.semibold))
                     .foregroundStyle(.white)
+                    .frame(maxWidth: .infinity, alignment: .leading)
             }
             .buttonStyle(.plain)
-            Text("Pick files and add them now")
-                .font(.caption2)
-                .foregroundStyle(.secondary)
         }
 
-        pillContainer(alignment: .leading, spacing: 8) {
-            Text("Quick Action")
-                .font(.caption2)
-                .foregroundStyle(.secondary)
+        pillContainer(alignment: .leading, spacing: 7) {
+            HStack(spacing: 9) {
+                ZStack {
+                    Circle()
+                        .fill(AppTheme.vividPurple.opacity(0.22))
+                        .frame(width: 30, height: 30)
+                    Image(systemName: "folder.fill")
+                        .font(.system(size: 13, weight: .semibold))
+                        .foregroundStyle(AppTheme.vividPurple)
+                }
+                VStack(alignment: .leading, spacing: 2) {
+                    Text("Destination")
+                        .font(.caption2.weight(.bold))
+                        .foregroundStyle(AppTheme.vividPurple)
+                    Text(model.organizationRoot?.lastPathComponent ?? "Not set")
+                        .font(.caption2)
+                        .foregroundStyle(.secondary)
+                        .lineLimit(1)
+                        .truncationMode(.middle)
+                }
+            }
             Button {
                 model.revealOrganizationFolder()
             } label: {
-                Label("Open Organized Folder", systemImage: "folder")
+                Text("Open Organized Folder")
                     .font(.caption.weight(.semibold))
                     .foregroundStyle(.white)
+                    .frame(maxWidth: .infinity, alignment: .leading)
             }
             .buttonStyle(.plain)
-            Text("Jump to destination folder")
-                .font(.caption2)
-                .foregroundStyle(.secondary)
         }
     }
 
